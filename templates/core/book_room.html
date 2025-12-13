@@ -1,0 +1,31 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Book {{ room.room_number }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="display-5 text-primary mb-4">Book Room {{ room.room_number }} at {{ room.hotel.name }}</h1>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <p><strong>Room Type:</strong> {{ room.room_type }}</p>
+                    <p><strong>Price per night:</strong> Rs. {{ room.price_per_night }}</p>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Check-in Date</label>
+                            {{ form.check_in }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Check-out Date</label>
+                            {{ form.check_out }}
+                        </div>
+                        <button type="submit" class="btn btn-success btn-lg w-100">Confirm Booking</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

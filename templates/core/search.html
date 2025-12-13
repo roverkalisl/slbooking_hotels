@@ -1,0 +1,42 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Search Hotels{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="display-5 text-primary mb-4">
+        <i class="fas fa-search me-3"></i>Search Results
+    </h1>
+    {% if query %}
+        <p class="lead">Results for "<strong>{{ query }}</strong>"</p>
+    {% endif %}
+
+    {% if hotels %}
+        <div class="row">
+            {% for hotel in hotels %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card shadow-sm h-100">
+                        {% if hotel.image %}
+                            <img src="{{ hotel.image.url }}" class="card-img-top" alt="{{ hotel.name }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-light text-center py-5" style="height: 200px;">
+                                <i class="fas fa-hotel fa-3x text-muted"></i>
+                            </div>
+                        {% endif %}
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ hotel.name }}</h5>
+                            <p class="card-text"><i class="fas fa-map-marker-alt me-2"></i>{{ hotel.location }}</p>
+                            <p class="card-text flex-grow-1">{{ hotel.description|truncatewords:20 }}</p>
+                            <a href="{% url 'hotel_detail' hotel.id %}" class="btn btn-primary mt-auto">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>No hotels found. Try a different search!
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

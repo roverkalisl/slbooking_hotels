@@ -1,0 +1,30 @@
+{% extends 'core/base.html' %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="jumbotron bg-primary text-white p-5 rounded">
+    <h1 class="display-4">Welcome to Hotel Booking Sri Lanka</h1>
+    <p class="lead>Find and book the best hotels in Sri Lanka</p>
+    <a href="{% url 'search_hotels' %}" class="btn btn-light btn-lg">Search Hotels</a>
+</div>
+
+<h3 class="mt-5">Featured Hotels</h3>
+<div class="row">
+    {% for hotel in hotels %}
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            {% if hotel.image %}
+                <img src="{{ hotel.image.url }}" class="card-img-top" height="200">
+            {% endif %}
+            <div class="card-body">
+                <h5>{{ hotel.name }}</h5>
+                <p>{{ hotel.location }}</p>
+                <a href="{% url 'hotel_detail' hotel.id %}" class="btn btn-primary">View Details</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <p>No hotels yet. Admin or hotel owners can add hotels!</p>
+    {% endfor %}
+</div>
+{% endblock %}

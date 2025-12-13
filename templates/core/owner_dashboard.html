@@ -1,0 +1,55 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Owner Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="display-5 text-primary mb-4">
+                <i class="fas fa-tachometer-alt me-3"></i>Owner Dashboard
+            </h1>
+            <a href="{% url 'add_hotel' %}" class="btn btn-success btn-lg mb-4">
+                <i class="fas fa-plus me-2"></i>Add New Hotel
+            </a>
+        </div>
+    </div>
+
+    <h3 class="mt-5">Your Hotels</h3>
+    {% if hotels %}
+        <div class="row">
+            {% for hotel in hotels %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card shadow-sm h-100">
+                        {% if hotel.image %}
+                            <img src="{{ hotel.image.url }}" class="card-img-top" alt="{{ hotel.name }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-light text-center py-5" style="height: 200px;">
+                                <i class="fas fa-hotel fa-3x text-muted"></i>
+                            </div>
+                        {% endif %}
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ hotel.name }}</h5>
+                            <p class="card-text"><i class="fas fa-map-marker-alt me-2"></i>{{ hotel.location }}</p>
+                            <p class="card-text flex-grow-1">{{ hotel.description|truncatewords:20 }}</p>
+                            <div class="mt-auto">
+                                <a href="{% url 'add_room' hotel.id %}" class="btn btn-primary btn-sm me-2">
+                                    <i class="fas fa-bed me-1"></i>Add Room
+                                </a>
+                                <a href="{% url 'owner_bookings' %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-calendar-check me-1"></i>View Bookings
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info mt-4">
+            <i class="fas fa-info-circle me-2"></i>
+            You don't have any hotels yet. <a href="{% url 'add_hotel' %}">Add your first hotel</a> to get started!
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

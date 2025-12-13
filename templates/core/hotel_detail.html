@@ -1,0 +1,37 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ hotel.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8">
+            {% if hotel.image %}
+                <img src="{{ hotel.image.url }}" class="img-fluid rounded shadow mb-4" alt="{{ hotel.name }}">
+            {% endif %}
+            <h1 class="display-5">{{ hotel.name }}</h1>
+            <p class="lead"><i class="fas fa-map-marker-alt me-2"></i>{{ hotel.location }}</p>
+            <p>{{ hotel.description }}</p>
+        </div>
+    </div>
+
+    <h3 class="mt-5">Available Rooms</h3>
+    {% if rooms %}
+        <div class="row">
+            {% for room in rooms %}
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>{{ room.room_number }} - {{ room.room_type }}</h5>
+                            <p><strong>Price per night:</strong> Rs. {{ room.price_per_night }}</p>
+                            <a href="{% url 'book_room' room.id %}" class="btn btn-success">Book Now</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-warning">No rooms available at the moment.</div>
+    {% endif %}
+</div>
+{% endblock %}
