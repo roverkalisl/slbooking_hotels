@@ -1,30 +1,40 @@
 {% extends 'core/base.html' %}
+
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<div class="jumbotron bg-primary text-white p-5 rounded">
-    <h1 class="display-4">Welcome to Hotel Booking Sri Lanka</h1>
-    <p class="lead>Find and book the best hotels in Sri Lanka</p>
-    <a href="{% url 'search_hotels' %}" class="btn btn-light btn-lg">Search Hotels</a>
-</div>
-
-<h3 class="mt-5">Featured Hotels</h3>
-<div class="row">
-    {% for hotel in hotels %}
-    <div class="col-md-4 mb-4">
-        <div class="card">
-            {% if hotel.image %}
-                <img src="{{ hotel.image.url }}" class="card-img-top" height="200">
-            {% endif %}
-            <div class="card-body">
-                <h5>{{ hotel.name }}</h5>
-                <p>{{ hotel.location }}</p>
-                <a href="{% url 'hotel_detail' hotel.id %}" class="btn btn-primary">View Details</a>
-            </div>
-        </div>
+<div class="container mt-5">
+    <div class="jumbotron bg-primary text-white rounded p-5 mb-5 text-center">
+        <h1 class="display-4">Welcome to Hotel Booking Sri Lanka</h1>
+        <p class="lead">Find and book the best hotels and villas across Sri Lanka</p>
+        <a href="{% url 'search_hotels' %}" class="btn btn-light btn-lg">Search Hotels</a>
     </div>
-    {% empty %}
-    <p>No hotels yet. Admin or hotel owners can add hotels!</p>
-    {% endfor %}
+
+    <h2 class="mb-4">Featured Hotels</h2>
+    {% if hotels %}
+        <div class="row">
+            {% for hotel in hotels %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card shadow-sm h-100">
+                        {% if hotel.main_image %}
+                            <img src="{{ hotel.main_image.url }}" class="card-img-top" alt="{{ hotel.name }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-light text-center py-5" style="height: 200px;">
+                                <i class="fas fa-hotel fa-3x text-muted"></i>
+                            </div>
+                        {% endif %}
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ hotel.name }}</h5>
+                            <p class="card-text"><i class="fas fa-map-marker-alt me-2"></i>{{ hotel.address|default:"Location not specified" }}</p>
+                            <p class="card-text flex-grow-1">{{ hotel.facilities|default:"Great facilities"|truncatewords:15 }}</p>
+                            <a href="{% url 'hotel_detail' hotel.id %}" class="btn btn-primary mt-auto">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">No hotels available yet. Check back soon!</div>
+    {% endif %}
 </div>
 {% endblock %}
