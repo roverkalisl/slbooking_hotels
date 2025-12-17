@@ -21,4 +21,8 @@ urlpatterns = [
     path('owner/hotel/<int:hotel_id>/add-room/', views.add_room, name='add_room'),
     path('owner/bookings/', views.owner_bookings, name='owner_bookings'),
     path('owner/booking/<int:booking_id>/confirm/', views.confirm_booking, name='confirm_booking'),
+    # core/urls.py
+path('owner/booking/<int:booking_id>/confirm/', views.confirm_booking, name='confirm_booking'),
+path('owner/booking/<int:booking_id>/reject/', views.reject_booking, name='reject_booking'),
+path('booking/<int:booking_id>/cancel/', views.cancel_booking, name='cancel_booking'),
 ]

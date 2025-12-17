@@ -27,27 +27,40 @@ def save_profile(sender, instance, **kwargs):
         instance.profile.save()
 
 class Hotel(models.Model):
+    RENTED_TYPE_CHOICES = (
+        ('full', 'Full Villa'),
+        ('rooms', 'Individual Rooms'),
+    )
+    FACILITIES_CHOICES = (
+        ('ac', 'Air Conditioning'),
+        ('pool', 'Swimming Pool'),
+        ('hot_water', 'Hot Water'),
+        ('wifi', 'WiFi'),
+        ('parking', 'Parking'),
+        ('bbq', 'BBQ Area'),
+        # add more as needed
+    )
     name = models.CharField(max_length=200)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='hotels')
     address = models.TextField()
     google_location_link = models.URLField(blank=True, null=True)
     social_media_link = models.URLField(blank=True, null=True)
-    rented_type = models.CharField(max_length=20, choices=(('full', 'Full Villa'), ('rooms', 'Individual Rooms')))
-    facilities = models.TextField(blank=True)
+    rented_type = models.CharField(max_length=20, choices=RENTED_TYPE_CHOICES, default='rooms')
+    facilities = models.ManyToManyField('Facility', blank=True)  # tick box සඳහා
     main_image = models.ImageField(upload_to='hotels/', blank=True, null=True)
-       # ... ඉතුරු fields ...
-    #main_image = models.ImageField(upload_to='hotels/', blank=True, null=True)
-    additional_images = models.ImageField(upload_to='hotels/extra/', blank=True, null=True)  # ← අලුත් field එක add කරලා
 
     def __str__(self):
         return self.name
+
+class Facility(models.Model):
+    name = models.CharField(max_length=100)
 
     def __str__(self):
         return self.name
 
 class Room(models.Model):
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='rooms')
-    room_number = models.CharField(max_length=10)
+    room_number = models.CharField(max_length=20)
     room_type = models.CharField(max_length=50)
     price_per_night = models.DecimalField(max_digits=10, decimal_places=2)
     image = models.ImageField(upload_to='rooms/', blank=True, null=True)
@@ -57,11 +70,16 @@ class Room(models.Model):
         return f"{self.hotel.name} - {self.room_number}"
 
 class Booking(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('confirmed', 'Confirmed'),
+        ('cancelled', 'Cancelled'),
+    )
     customer = models.ForeignKey(User, on_delete=models.CASCADE)
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
     check_in = models.DateField()
     check_out = models.DateField()
-    status = models.CharField(max_length=20, default='pending', choices=(('pending', 'Pending'), ('confirmed', 'Confirmed')))
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
 
     def __str__(self):
         return f"{self.customer} - {self.room} ({self.check_in} to {self.check_out})"

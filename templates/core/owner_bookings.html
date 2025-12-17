@@ -33,9 +33,10 @@
                                 </span>
                             </td>
                             <td>
-                                {% if booking.status == 'pending' %}
-                                    <a href="{% url 'confirm_booking' booking.id %}" class="btn btn-sm btn-success">Confirm</a>
-                                {% endif %}
+                          {% if booking.status == 'pending' %}
+    <a href="{% url 'confirm_booking' booking.id %}" class="btn btn-sm btn-success">Confirm</a>
+    <a href="{% url 'reject_booking' booking.id %}" class="btn btn-sm btn-danger">Reject</a>
+{% endif %}
                             </td>
                         </tr>
                     {% endfor %}
