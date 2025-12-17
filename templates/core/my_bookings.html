@@ -4,9 +4,7 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h1 class="display-5 text-primary mb-4">
-        <i class="fas fa-calendar-check me-3"></i>My Bookings
-    </h1>
+    <h1 class="display-5 text-primary mb-4">My Bookings</h1>
 
     {% if bookings %}
         <div class="row">
@@ -17,25 +15,24 @@
                             <h5 class="mb-0">{{ booking.room.hotel.name }} - {{ booking.room.room_number }}</h5>
                         </div>
                         <div class="card-body">
-                            <p><strong>Room Type:</strong> {{ booking.room.get_room_type_display }}</p>
                             <p><strong>Check-in:</strong> {{ booking.check_in }}</p>
                             <p><strong>Check-out:</strong> {{ booking.check_out }}</p>
                             <p><strong>Status:</strong> 
-                                <span class="badge bg-{% if booking.status == 'confirmed' %}success{% else %}warning{% endif %}">
+                                <span class="badge bg-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'cancelled' %}danger{% else %}warning{% endif %}">
                                     {{ booking.get_status_display }}
                                 </span>
                             </p>
-                            <p><strong>Total Price:</strong> Rs. {{ booking.total_price|default:"Pending" }}</p>
+                            <p><strong>Total Price:</strong> Rs. Pending</p>
+                            {% if booking.status != 'cancelled' %}
+                                <a href="{% url 'cancel_booking' booking.id %}" class="btn btn-danger btn-sm">Cancel Booking</a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
             {% endfor %}
         </div>
     {% else %}
-        <div class="alert alert-info mt-4">
-            <i class="fas fa-info-circle me-2"></i>
-            You have no bookings yet. <a href="{% url 'search_hotels' %}">Search hotels</a> and book your stay!
-        </div>
+        <div class="alert alert-info">You have no bookings yet.</div>
     {% endif %}
 </div>
 {% endblock %}

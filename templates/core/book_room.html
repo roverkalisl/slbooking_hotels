@@ -5,27 +5,50 @@
 {% block content %}
 <div class="container mt-5">
     <h1 class="display-5 text-primary mb-4">Book Room {{ room.room_number }} at {{ room.hotel.name }}</h1>
+
     <div class="row">
         <div class="col-md-6">
-            <div class="card shadow">
-                <div class="card-body">
-                    <p><strong>Room Type:</strong> {{ room.room_type }}</p>
-                    <p><strong>Price per night:</strong> Rs. {{ room.price_per_night }}</p>
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label class="form-label">Check-in Date</label>
-                            {{ form.check_in }}
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Check-out Date</label>
-                            {{ form.check_out }}
-                        </div>
-                        <button type="submit" class="btn btn-success btn-lg w-100">Confirm Booking</button>
-                    </form>
-                </div>
-            </div>
+            {% if room.image %}
+                <img src="{{ room.image.url }}" class="img-fluid rounded shadow mb-4" alt="{{ room.room_number }}">
+            {% endif %}
+            <p><strong>Room Type:</strong> {{ room.room_type }}</p>
+            <p><strong>Price per night:</strong> Rs. {{ room.price_per_night }}</p>
+        </div>
+        <div class="col-md-6">
+            <h4>Availability Calendar</h4>
+            <div id="calendar"></div>
         </div>
     </div>
-</div>
+
+    <form method="post" class="mt-4">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label">Check-in Date</label>
+            {{ form.check_in }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Check-out Date</label>
+            {{ form.check_out }}
+        </div>
+        <button type="submit" class="btn btn-success btn-lg">Confirm Booking</button>
+    </form>
+
+    <!-- FullCalendar -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                selectable: true,
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek'
+                },
+                // Booked dates disable කරන්න (advanced සඳහා backend එකෙන් JSON pass කරන්න)
+            });
+            calendar.render();
+        });
+    </script>
 {% endblock %}

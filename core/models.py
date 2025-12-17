@@ -48,6 +48,7 @@ class Hotel(models.Model):
     rented_type = models.CharField(max_length=20, choices=RENTED_TYPE_CHOICES, default='rooms')
     facilities = models.ManyToManyField('Facility', blank=True)  # tick box සඳහා
     main_image = models.ImageField(upload_to='hotels/', blank=True, null=True)
+    ical_link = models.URLField(blank=True, null=True, help_text="Booking.com iCal link for calendar sync")
 
     def __str__(self):
         return self.name
