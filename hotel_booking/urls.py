@@ -1,4 +1,4 @@
-# hotel_booking/urls.py (Project level – මෙහි include('core.urls') තියෙන්න ඕනේ)
+# hotel_booking/urls.py
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
@@ -6,10 +6,10 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('core.urls')),  # මෙතන core app එකේ urls include කරලා තියෙනවා
+    path('', include('core.urls')),
 ]
 
-# Development එකේ static & media files serve කරන්න
+# Development එකේ media serve කරන්න (Railway එකේ volume එක handle කරනවා)
 if settings.DEBUG:
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

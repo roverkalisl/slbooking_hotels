@@ -8,9 +8,9 @@ class ProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Hotel)
 class HotelAdmin(admin.ModelAdmin):
-    list_display = ['name', 'owner', 'location']
-    list_filter = ['location']
-    search_fields = ['name', 'location']
+    list_display = ['name', 'owner']  # ← 'location' remove කරලා තියෙනවා
+    list_filter = []  # ← 'location' remove කරලා empty කරලා
+    search_fields = ['name']
 
 @admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
