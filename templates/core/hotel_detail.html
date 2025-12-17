@@ -37,26 +37,30 @@
         </div>
     </div>
 
-    <h3 class="mt-5">Available Rooms</h3>
-    {% if rooms %}
-        <div class="row">
-            {% for room in rooms %}
-                <div class="col-md-6 mb-4">
-                    <div class="card shadow-sm">
-                        {% if room.image %}
-                            <img src="{{ room.image.url }}" class="card-img-top" alt="{{ room.room_number }}" style="height: 200px; object-fit: cover;">
-                        {% endif %}
-                        <div class="card-body">
-                            <h5>{{ room.room_number }} - {{ room.room_type }}</h5>
-                            <p><strong>Price per night:</strong> Rs. {{ room.price_per_night }}</p>
-                            <a href="{% url 'book_room' room.id %}" class="btn btn-success">Book Now</a>
+  <h3 class="mt-5">Available Rooms</h3>
+{% if rooms %}
+    <div class="row">
+        {% for room in rooms %}
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    {% if room.image %}
+                        <img src="{{ room.image.url }}" class="card-img-top" alt="{{ room.room_number }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                        <div class="bg-light text-center py-5" style="height: 200px;">
+                            <i class="fas fa-bed fa-3x text-muted"></i>
                         </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h5>{{ room.room_number }} - {{ room.room_type }}</h5>
+                        <p><strong>Price per night:</strong> Rs. {{ room.price_per_night }}</p>
+                        <a href="{% url 'book_room' room.id %}" class="btn btn-success">Book Now</a>
                     </div>
                 </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="alert alert-warning">No rooms available at the moment.</div>
-    {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-warning">No rooms available at the moment.</div>
+{% endif %}
 </div>
 {% endblock %}
