@@ -6,12 +6,34 @@
 <div class="container mt-5">
     <div class="row">
         <div class="col-lg-8">
-            {% if hotel.image %}
-                <img src="{{ hotel.image.url }}" class="img-fluid rounded shadow mb-4" alt="{{ hotel.name }}">
+            {% if hotel.main_image %}
+                <img src="{{ hotel.main_image.url }}" class="img-fluid rounded shadow mb-4" alt="{{ hotel.name }}" style="max-height: 500px; object-fit: cover;">
+            {% else %}
+                <div class="bg-light text-center py-5 rounded shadow mb-4">
+                    <i class="fas fa-hotel fa-5x text-muted"></i>
+                    <p class="mt-3 text-muted">No main image</p>
+                </div>
             {% endif %}
-            <h1 class="display-5">{{ hotel.name }}</h1>
-            <p class="lead"><i class="fas fa-map-marker-alt me-2"></i>{{ hotel.location }}</p>
-            <p>{{ hotel.description }}</p>
+
+            <h1 class="display-5 mb-3">{{ hotel.name }}</h1>
+            
+            {% if hotel.address %}
+                <p class="lead"><i class="fas fa-map-marker-alt me-2"></i>{{ hotel.address }}</p>
+            {% endif %}
+            
+            {% if hotel.google_location_link %}
+                <p><i class="fas fa-globe me-2"></i><a href="{{ hotel.google_location_link }}" target="_blank">View on Google Maps</a></p>
+            {% endif %}
+            
+            {% if hotel.social_media_link %}
+                <p><i class="fas fa-link me-2"></i><a href="{{ hotel.social_media_link }}" target="_blank">Social Media / Website</a></p>
+            {% endif %}
+            
+            <p><strong>Rented Type:</strong> {{ hotel.get_rented_type_display }}</p>
+            
+            {% if hotel.facilities %}
+                <p><strong>Facilities:</strong> {{ hotel.facilities }}</p>
+            {% endif %}
         </div>
     </div>
 
@@ -20,7 +42,10 @@
         <div class="row">
             {% for room in rooms %}
                 <div class="col-md-6 mb-4">
-                    <div class="card">
+                    <div class="card shadow-sm">
+                        {% if room.image %}
+                            <img src="{{ room.image.url }}" class="card-img-top" alt="{{ room.room_number }}" style="height: 200px; object-fit: cover;">
+                        {% endif %}
                         <div class="card-body">
                             <h5>{{ room.room_number }} - {{ room.room_type }}</h5>
                             <p><strong>Price per night:</strong> Rs. {{ room.price_per_night }}</p>
