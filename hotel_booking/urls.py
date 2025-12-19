@@ -9,7 +9,6 @@ urlpatterns = [
     path('', include('core.urls')),
 ]
 
-# Development එකේ media serve කරන්න (Railway එකේ volume එක handle කරනවා)
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+# Media files serve කරන්න (development + production safe)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
