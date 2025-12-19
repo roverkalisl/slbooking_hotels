@@ -80,18 +80,23 @@ def owner_dashboard(request):
 @login_required
 def add_hotel(request):
     if request.user.profile.role != 'owner':
+        messages.error(request, 'Only hotel owners can add hotels.')
         return redirect('home')
+    
     if request.method == 'POST':
         form = HotelForm(request.POST, request.FILES)
         if form.is_valid():
             hotel = form.save(commit=False)
             hotel.owner = request.user
             hotel.save()
-            form.save_m2m()  # facilities manytomany සඳහා
-            messages.success(request, 'Hotel added!')
+            form.save_m2m()  # facilities manytomany සඳහා (ඔයාගේ model එකේ facilities manytomany නම්)
+            messages.success(request, 'Hotel added successfully!')
             return redirect('owner_dashboard')
+        else:
+            messages.error(request, 'Please correct the errors below.')
     else:
         form = HotelForm()
+    
     return render(request, 'core/add_hotel.html', {'form': form})
 
 @login_required
@@ -103,10 +108,13 @@ def add_room(request, hotel_id):
             room = form.save(commit=False)
             room.hotel = hotel
             room.save()
-            messages.success(request, 'Room added!')
+            messages.success(request, 'Room added successfully!')
             return redirect('owner_dashboard')
+        else:
+            messages.error(request, 'Please correct the errors below.')
     else:
         form = RoomForm()
+    
     return render(request, 'core/add_room.html', {'form': form, 'hotel': hotel})
 
 @login_required
