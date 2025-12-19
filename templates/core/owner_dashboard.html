@@ -52,4 +52,20 @@
         </div>
     {% endif %}
 </div>
+<div id="calendar"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'dayGridMonth',
+      events: [
+        // backend එකෙන් bookings JSON pass කරන්න (view එකේ context එකට add කරන්න)
+        // e.g., {'title': 'Booking - Room 001', 'start': '2025-12-25', 'end': '2025-12-26'}
+      ]
+    });
+    calendar.render();
+  });
+</script>
 {% endblock %}
