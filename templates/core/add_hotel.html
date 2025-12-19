@@ -1,6 +1,6 @@
 {% extends 'core/base.html' %}
 
-{% block title %}Add Hotel{% endblock %}
+{% block title %}Add New Hotel{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
@@ -9,7 +9,7 @@
         <div class="col-md-8">
             <div class="card shadow">
                 <div class="card-body">
-                    <form method="post" enctype="multipart/form-data">
+                    <form method="post" enctype="multipart/form-data">  <!-- ← මේක important! image upload සඳහා -->
                         {% csrf_token %}
                         {{ form.as_p }}
                         <button type="submit" class="btn btn-success btn-lg w-100">Add Hotel</button>
