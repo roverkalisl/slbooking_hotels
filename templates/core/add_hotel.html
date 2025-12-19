@@ -9,7 +9,7 @@
         <div class="col-md-8">
             <div class="card shadow">
                 <div class="card-body">
-                    <form method="post" enctype="multipart/form-data">  <!-- ← මේක important! image upload සඳහා -->
+                    <form method="post" enctype="multipart/form-data">  <!-- ← මේක අනිවාර්යයෙන්ම තියෙන්න ඕනේ image upload සඳහා -->
                         {% csrf_token %}
                         {{ form.as_p }}
                         <button type="submit" class="btn btn-success btn-lg w-100">Add Hotel</button>

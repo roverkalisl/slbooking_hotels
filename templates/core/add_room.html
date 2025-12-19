@@ -9,7 +9,7 @@
         <div class="col-md-6">
             <div class="card shadow">
                 <div class="card-body">
-                    <form method="post" enctype="multipart/form-data">  <!-- ← මෙතනත් enctype add කරන්න -->
+                    <form method="post" enctype="multipart/form-data">  <!-- ← මෙතනත් add කරන්න -->
                         {% csrf_token %}
                         {{ form.as_p }}
                         <button type="submit" class="btn btn-success btn-lg w-100">Add Room</button>
