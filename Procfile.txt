@@ -1,1 +1,1 @@
-web: gunicorn hotel_booking.wsgi:application --log-file -
+web: gunicorn hotel_booking.wsgi:application --bind 0.0.0.0:$PORT
