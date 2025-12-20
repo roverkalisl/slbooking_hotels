@@ -136,3 +136,7 @@ X_FRAME_OPTIONS = 'DENY'
 
 # Email (development එකේ console)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# settings.py අන්තිමට add කරන්න
+import sys
+if 'collectstatic' in sys.argv:
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'  # Whitenoise skip කරන්න collectstatic වෙලාවේ
