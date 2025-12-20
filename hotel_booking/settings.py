@@ -1,37 +1,39 @@
 """
-Django settings for hotel_booking project - Production Ready for Render.com + Cloudinary
+Django settings for hotel_booking project.
+Production ready for Render.com with Cloudinary for images
 """
 
 import os
 from pathlib import Path
 import dj_database_url
 
-# Build paths
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Security
+# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-this-in-production')
 
+# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['*']  # Render එකේ work වෙන්න – පස්සේ custom domain විතරක් දාන්න
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 INSTALLED_APPS = [
-    'cloudinary_storage',      # Cloudinary storage - ඉහළම තැන
+    'cloudinary_storage',  # Cloudinary storage (ඉහළම තැන)
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'cloudinary',              # Cloudinary
+    'cloudinary',
     'core.apps.CoreConfig',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Static files production එකේ
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -60,7 +62,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'hotel_booking.wsgi.application'
 
-# Database - Render PostgreSQL or local SQLite
+# Database
 DATABASES = {
     'default': dj_database_url.config(
         default=os.getenv('DATABASE_URL'),
@@ -87,14 +89,11 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'Asia/Colombo'
-
 USE_I18N = True
-
 USE_TZ = True
 
-# Static files (CSS, JavaScript, etc.)
+# Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
@@ -102,41 +101,36 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files - Cloudinary for uploaded images
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
     'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
 }
-
-MEDIA_URL = '/media/'  # Cloudinary auto generate කරන link එක
+MEDIA_URL = '/media/'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Login settings
+# Login redirect
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = '/login/'
 
-# Messages Bootstrap tags
+# Messages
 from django.contrib.messages import constants as messages
 MESSAGE_TAGS = {
     messages.ERROR: 'danger',
 }
 
-# Production security settings
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SECURE_SSL_REDIRECT = not DEBUG  # Development එකේ False
-SESSION_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_SECURE = not DEBUG
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'DENY'
+# Production security
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
 
-# Email (development එකේ console)
+# Email backend (console for development)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-# settings.py අන්තිමට add කරන්න
-import sys
-if 'collectstatic' in sys.argv:
-    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'  # Whitenoise skip කරන්න collectstatic වෙලාවේ
