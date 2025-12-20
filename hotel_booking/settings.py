@@ -1,36 +1,40 @@
+"""
+Django settings for hotel_booking project.
+Production ready for Render.com with Cloudinary for images
+Local development with SQLite fallback
+"""
+
 import os
 from pathlib import Path
 import dj_database_url
-from django.contrib.messages import constants as messages
 
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-local-fallback-key')
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-this-in-production')
 
-# DEBUG must be False in production
+# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-# Allow all hosts on Render
 ALLOWED_HOSTS = ['*']
 
 # Application definition
 INSTALLED_APPS = [
-    'cloudinary_storage',  # Cloudinary අනිවාර්යයෙන්ම staticfiles ට ඉහළින් තිබිය යුතුයි
+    'cloudinary_storage',      # Cloudinary storage - ඉහළම තැන
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'cloudinary',          # Cloudinary app එක
-    'core.apps.CoreConfig', # ඔබේ ප්‍රධාන App එක
+    'cloudinary',
+    'core.apps.CoreConfig',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # Static files සඳහා අනිවාර්යයි
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -59,19 +63,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'hotel_booking.wsgi.application'
 
-# --- DATABASE CONFIGURATION ---
-# Render එකේදී DATABASE_URL භාවිතා කරයි, Local වලදී SQLite භාවිතා කරයි
-DATABASE_URL = os.getenv('DATABASE_URL')
-
-if DATABASE_URL:
+# Database - Render PostgreSQL or local SQLite fallback
+if os.getenv('DATABASE_URL'):
     DATABASES = {
         'default': dj_database_url.config(
-            default=DATABASE_URL,
+            default=os.getenv('DATABASE_URL'),
             conn_max_age=600,
             ssl_require=True
         )
     }
 else:
+    # Local development - SQLite
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -93,39 +95,41 @@ TIME_ZONE = 'Asia/Colombo'
 USE_I18N = True
 USE_TZ = True
 
-# --- STATIC FILES (CSS, JavaScript) ---
+# Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-
-# WhiteNoise storage for Render
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# --- MEDIA FILES (Images via Cloudinary) ---
-# මෙම තොරතුරු Render Environment Variables වල තිබිය යුතුයි
+# Fix Cloudinary static files collectstatic error
+import sys
+if 'collectstatic' in sys.argv:
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+
+# Media files - Cloudinary for uploaded images
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
     'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
 }
-
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 MEDIA_URL = '/media/'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Login / Logout
+# Login settings
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = '/login/'
 
-# Message Tags (Bootstrap colors)
+# Messages Bootstrap friendly
+from django.contrib.messages import constants as messages
 MESSAGE_TAGS = {
     messages.ERROR: 'danger',
 }
 
-# Production Security
+# Production security settings
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = True
@@ -135,5 +139,5 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
 
-# Email backend
+# Email backend (development console)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
