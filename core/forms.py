@@ -2,7 +2,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Profile, Hotel, Room, Booking
+from .models import Profile, Hotel, Room, Booking, Facility
 
 class RegistrationForm(UserCreationForm):
     role = forms.ChoiceField(choices=Profile.ROLE_CHOICES)
@@ -27,16 +27,23 @@ class RegistrationForm(UserCreationForm):
 class HotelForm(forms.ModelForm):
     class Meta:
         model = Hotel
-        fields = ['name', 'address', 'google_location_link', 'social_media_link', 'rented_type', 'facilities', 'main_image']
+        fields = ['name', 'address', 'description', 'google_location_link', 'social_media_link', 
+                  'rented_type', 'facilities', 'main_image', 'price_per_night']
         widgets = {
             'address': forms.Textarea(attrs={'rows': 3}),
-            'facilities': forms.Textarea(attrs={'rows': 3}),
+            'description': forms.Textarea(attrs={'rows': 6}),
+            'facilities': forms.CheckboxSelectMultiple(),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Pre-populate facilities choices
+        self.fields['facilities'].queryset = Facility.objects.all()
 
 class RoomForm(forms.ModelForm):
     class Meta:
         model = Room
-        fields = ['room_number', 'room_type', 'price_per_night', 'image']
+        fields = ['room_number', 'room_type', 'ac_type', 'price_per_night', 'image']
 
 class BookingForm(forms.ModelForm):
     class Meta:

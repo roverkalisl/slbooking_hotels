@@ -6,3 +6,4 @@ dj-database-url
 psycopg2-binary
 cloudinary>=1.38.0
 django-cloudinary-storage>=0.3.0
+django-multiselectfield

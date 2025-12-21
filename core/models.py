@@ -26,49 +26,47 @@ def save_profile(sender, instance, **kwargs):
     if hasattr(instance, 'profile'):
         instance.profile.save()
 
+class Facility(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
 class Hotel(models.Model):
     RENTED_TYPE_CHOICES = (
         ('full', 'Full Villa'),
         ('rooms', 'Individual Rooms'),
     )
-    FACILITIES_CHOICES = (
-        ('ac', 'Air Conditioning'),
-        ('pool', 'Swimming Pool'),
-        ('hot_water', 'Hot Water'),
-        ('wifi', 'WiFi'),
-        ('parking', 'Parking'),
-        ('bbq', 'BBQ Area'),
-        # add more as needed
-    )
     name = models.CharField(max_length=200)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='hotels')
     address = models.TextField()
+    description = models.TextField(blank=True, null=True, help_text="Detailed description of the hotel/villa")
     google_location_link = models.URLField(blank=True, null=True)
     social_media_link = models.URLField(blank=True, null=True)
     rented_type = models.CharField(max_length=20, choices=RENTED_TYPE_CHOICES, default='rooms')
-    facilities = models.ManyToManyField('Facility', blank=True)  # tick box සඳහා
+    facilities = models.ManyToManyField(Facility, blank=True)  # tick box facilities
     main_image = models.ImageField(upload_to='hotels/', blank=True, null=True)
-    ical_link = models.URLField(blank=True, null=True, help_text="Booking.com iCal link for calendar sync")
-
-    def __str__(self):
-        return self.name
-
-class Facility(models.Model):
-    name = models.CharField(max_length=100)
+    price_per_night = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, 
+                                          help_text="Price per night if rented as Full Villa")
 
     def __str__(self):
         return self.name
 
 class Room(models.Model):
+    AC_CHOICES = (
+        ('ac', 'Air Conditioned'),
+        ('non_ac', 'Non-AC'),
+    )
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='rooms')
     room_number = models.CharField(max_length=20)
     room_type = models.CharField(max_length=50)
+    ac_type = models.CharField(max_length=10, choices=AC_CHOICES, default='non_ac')
     price_per_night = models.DecimalField(max_digits=10, decimal_places=2)
     image = models.ImageField(upload_to='rooms/', blank=True, null=True)
     is_available = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"{self.hotel.name} - {self.room_number}"
+        return f"{self.hotel.name} - {self.room_number} ({self.get_ac_type_display()})"
 
 class Booking(models.Model):
     STATUS_CHOICES = (
