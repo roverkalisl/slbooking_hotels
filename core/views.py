@@ -69,13 +69,35 @@ def cancel_booking(request, booking_id):
         messages.success(request, 'Booking cancelled!')
     return redirect('my_bookings')
 
+#@login_required
+#def owner_dashboard(request):
+ #   if request.user.profile.role != 'owner':
+   #     messages.error(request, 'Access denied.')
+  #      return redirect('home')
+   # hotels = Hotel.objects.filter(owner=request.user)
+   # return render(request, 'core/owner_dashboard.html', {'hotels': hotels})
+
 @login_required
 def owner_dashboard(request):
     if request.user.profile.role != 'owner':
-        messages.error(request, 'Access denied.')
+        messages.error(request, 'Access denied. Only hotel owners can access this page.')
         return redirect('home')
     hotels = Hotel.objects.filter(owner=request.user)
     return render(request, 'core/owner_dashboard.html', {'hotels': hotels})
+
+@login_required
+def edit_hotel(request, hotel_id):
+    hotel = get_object_or_404(Hotel, id=hotel_id, owner=request.user)
+    if request.method == 'POST':
+        form = HotelForm(request.POST, request.FILES, instance=hotel)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Hotel updated successfully!')
+            return redirect('owner_dashboard')
+    else:
+        form = HotelForm(instance=hotel)
+    return render(request, 'core/edit_hotel.html', {'form': form, 'hotel': hotel})
+
 
 @login_required
 def add_hotel(request):
@@ -155,3 +177,15 @@ def edit_hotel(request, hotel_id):
     else:
         form = HotelForm(instance=hotel)
     return render(request, 'core/edit_hotel.html', {'form': form, 'hotel': hotel})
+@login_required
+def edit_room(request, room_id):
+    room = get_object_or_404(Room, id=room_id, hotel__owner=request.user)
+    if request.method == 'POST':
+        form = RoomForm(request.POST, request.FILES, instance=room)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Room updated successfully!')
+            return redirect('owner_dashboard')
+    else:
+        form = RoomForm(instance=room)
+    return render(request, 'core/edit_room.html', {'form': form, 'room': room})
