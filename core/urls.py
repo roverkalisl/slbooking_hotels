@@ -21,6 +21,7 @@ urlpatterns = [
 
     # Hotel Owner URLs
     path('owner/dashboard/', views.owner_dashboard, name='owner_dashboard'),
+    path('owner/edit-room/<int:room_id>/', views.edit_room, name='edit_room'),
     path('owner/add-hotel/', views.add_hotel, name='add_hotel'),
     path('owner/hotel/<int:hotel_id>/add-room/', views.add_room, name='add_room'),
     path('owner/bookings/', views.owner_bookings, name='owner_bookings'),
