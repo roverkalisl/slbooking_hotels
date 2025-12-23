@@ -102,23 +102,18 @@ def edit_hotel(request, hotel_id):
 @login_required
 def add_hotel(request):
     if request.user.profile.role != 'owner':
-        messages.error(request, 'Only hotel owners can add hotels.')
         return redirect('home')
-    
     if request.method == 'POST':
         form = HotelForm(request.POST, request.FILES)
         if form.is_valid():
             hotel = form.save(commit=False)
             hotel.owner = request.user
             hotel.save()
-            form.save_m2m()  # facilities manytomany සඳහා (ඔයාගේ model එකේ facilities manytomany නම්)
+            form.save_m2m()  # add කරනකොට තියෙනවා නම් safe, නැත්නම් remove කරන්න
             messages.success(request, 'Hotel added successfully!')
             return redirect('owner_dashboard')
-        else:
-            messages.error(request, 'Please correct the errors below.')
     else:
         form = HotelForm()
-    
     return render(request, 'core/add_hotel.html', {'form': form})
 
 @login_required
@@ -171,8 +166,7 @@ def edit_hotel(request, hotel_id):
     if request.method == 'POST':
         form = HotelForm(request.POST, request.FILES, instance=hotel)
         if form.is_valid():
-            form.save()
-            form.save_m2m()  # facilities සඳහා
+            form.save()  # ManyToMany fields auto save වෙනවා – save_m2m() ඕන නැහැ
             messages.success(request, 'Hotel updated successfully!')
             return redirect('owner_dashboard')
     else:
