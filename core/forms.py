@@ -34,12 +34,6 @@ class HotelForm(forms.ModelForm):
             'description': forms.Textarea(attrs={'rows': 6}),
             'facilities': forms.CheckboxSelectMultiple(),
         }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Pre-populate facilities choices
-        self.fields['facilities'].queryset = Facility.objects.all()
-
 class RoomForm(forms.ModelForm):
     class Meta:
         model = Room

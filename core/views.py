@@ -172,6 +172,7 @@ def edit_hotel(request, hotel_id):
         form = HotelForm(request.POST, request.FILES, instance=hotel)
         if form.is_valid():
             form.save()
+            form.save_m2m()  # facilities සඳහා
             messages.success(request, 'Hotel updated successfully!')
             return redirect('owner_dashboard')
     else:
@@ -189,3 +190,29 @@ def edit_room(request, room_id):
     else:
         form = RoomForm(instance=room)
     return render(request, 'core/edit_room.html', {'form': form, 'room': room})
+@login_required
+def book_room(request, room_id):
+    room = get_object_or_404(Room, id=room_id)
+    if request.method == 'POST':
+        form = BookingForm(request.POST)
+        if form.is_valid():
+            check_in = form.cleaned_data['check_in']
+            check_out = form.cleaned_data['check_out']
+            overlapping = Booking.objects.filter(
+                room=room,
+                check_in__lt=check_out,
+                check_out__gt=check_in,
+                status__in=['pending', 'confirmed']
+            ).exists()
+            if overlapping:
+                messages.error(request, 'This room is not available for the selected dates.')
+            else:
+                booking = form.save(commit=False)
+                booking.customer = request.user
+                booking.room = room
+                booking.save()
+                messages.success(request, 'Booking requested successfully!')
+                return redirect('my_bookings')
+    else:
+        form = BookingForm()
+    return render(request, 'core/book_room.html', {'form': form, 'room': room})
