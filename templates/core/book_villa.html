@@ -1,15 +1,33 @@
 {% extends 'core/base.html' %}
 
-{% block title %}Book Villa - {{ hotel.name }}{% endblock %}
+{% block title %}Book Entire Villa - {{ hotel.name }}{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
-    <h1>Book Entire Villa - {{ hotel.name }}</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Request Booking</button>
-    </form>
-    <a href="{% url 'hotel_detail' hotel.id %}">Back to Details</a>
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-success text-white text-center py-4">
+                    <h2 class="mb-0"><i class="fas fa-home me-3"></i>Book Entire Villa - {{ hotel.name }}</h2>
+                </div>
+                <div class="card-body p-5">
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-calendar-check me-2"></i>Request Booking
+                            </button>
+                        </div>
+                    </form>
+                    <div class="text-center mt-4">
+                        <a href="{% url 'hotel_detail' hotel.id %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
