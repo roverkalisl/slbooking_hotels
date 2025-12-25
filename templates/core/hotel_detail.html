@@ -1,81 +1,103 @@
 {% extends 'core/base.html' %}
 {% load static %}
 
-{% block title %}{{ hotel.name }}{% endblock %}
+{% block title %}{{ hotel.name }} - Hotel Details{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container mt-5 mb-5">
     <div class="row">
         <div class="col-lg-8">
+            <!-- Main Image Carousel -->
             {% if hotel.main_image %}
-                <img src="{{ hotel.main_image.url }}" class="img-fluid rounded shadow mb-4" alt="{{ hotel.name }}" style="max-height: 500px; object-fit: cover;">
-            {% else %}
-                <div class="bg-light text-center py-5 rounded shadow mb-4">
-                    <i class="fas fa-hotel fa-5x text-muted"></i>
-                    <p class="mt-3 text-muted">No main image available</p>
+                <div class="mb-4">
+                    <img src="{{ hotel.main_image.url }}" class="img-fluid rounded shadow" alt="{{ hotel.name }}" style="max-height: 500px; width: 100%; object-fit: cover;">
                 </div>
             {% endif %}
 
-            <h1 class="display-5 mb-3">{{ hotel.name }}</h1>
-            
-            {% if hotel.address %}
-                <p class="lead"><i class="fas fa-map-marker-alt me-2"></i>{{ hotel.address }}</p>
-            {% endif %}
-            
-            {% if hotel.description %}
-                <p class="mb-3">{{ hotel.description }}</p>
-            {% endif %}
-            
-            {% if hotel.google_location_link %}
-                <p><i class="fas fa-map me-2"></i>
-                    <a href="{{ hotel.google_location_link }}" target="_blank" class="text-primary">View on Google Maps</a>
-                </p>
-            {% endif %}
-            
-            {% if hotel.social_media_link %}
-                <p><i class="fas fa-link me-2"></i>
-                    <a href="{{ hotel.social_media_link }}" target="_blank" class="text-primary">Website / Social Media</a>
-                </p>
-            {% endif %}
-            
-            <p><strong>Rented Type:</strong> {{ hotel.get_rented_type_display }}</p>
-            
-            {% if hotel.facilities.all %}
-                <p><strong>Facilities:</strong>
-                    {% for facility in hotel.facilities.all %}
-                        {{ facility.name }}{% if not forloop.last %}, {% endif %}
-                    {% endfor %}
-                </p>
-            {% endif %}
-        </div>
-    </div>
+            <h1 class="display-5 text-primary mb-3">{{ hotel.name }}</h1>
+            <p class="lead"><i class="fas fa-map-marker-alt me-2"></i>{{ hotel.address }}</p>
 
-    <h3 class="mt-5 mb-4">Available Rooms</h3>
-    {% if rooms %}
-        <div class="row">
-            {% for room in rooms %}
-                <div class="col-md-6 col-lg-4 mb-4">
-                    <div class="card shadow-sm h-100">
-                        {% if room.image %}
-                            <img src="{{ room.image.url }}" class="card-img-top" alt="{{ room.room_number }}" style="height: 200px; object-fit: cover;">
-                        {% else %}
-                            <div class="bg-light text-center py-5" style="height: 200px;">
-                                <i class="fas fa-bed fa-3x text-muted"></i>
-                                <p class="mt-3 text-muted small">No room image</p>
+            {% if hotel.description %}
+                <div class="mb-4">
+                    <h4>About this property</h4>
+                    <p class="text-muted">{{ hotel.description }}</p>
+                </div>
+            {% endif %}
+
+            <!-- Facilities -->
+            {% if hotel.facilities.all %}
+                <div class="mb-4">
+                    <h4><i class="fas fa-concierge-bell me-2"></i>Popular Facilities</h4>
+                    <div class="row">
+                        {% for facility in hotel.facilities.all %}
+                            <div class="col-md-6 mb-2">
+                                <i class="fas fa-check text-success me-2"></i>{{ facility.name }}
                             </div>
-                        {% endif %}
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title">{{ room.room_number }} - {{ room.room_type }}</h5>
-                            <p class="card-text"><strong>AC:</strong> {{ room.get_ac_type_display }}</p>
-                            <p class="card-text"><strong>Price per night:</strong> Rs. {{ room.price_per_night }}</p>
-                            <a href="{% url 'book_room' room.id %}" class="btn btn-success mt-auto">Book Now</a>
-                        </div>
+                        {% endfor %}
                     </div>
                 </div>
-            {% endfor %}
+            {% endif %}
+
+            <!-- Rented Type Info -->
+            <div class="alert alert-info">
+                <strong>Rented as:</strong> {{ hotel.get_rented_type_display }}
+                {% if hotel.rented_type == 'full' and hotel.price_per_night %}
+                    <br><strong>Price per night:</strong> LKR {{ hotel.price_per_night }}
+                {% endif %}
+            </div>
+
+            <!-- Full Villa Booking -->
+            {% if hotel.rented_type == 'full' %}
+                <div class="text-center my-5">
+                    <a href="{% url 'book_villa' hotel.id %}" class="btn btn-success btn-lg px-5 py-3">
+                        <i class="fas fa-calendar-plus me-3"></i>Book Entire Villa
+                    </a>
+                </div>
+            {% else %}
+                <!-- Rooms List -->
+                <h4 class="mt-5"><i class="fas fa-bed me-2"></i>Available Rooms</h4>
+                {% if rooms %}
+                    <div class="row">
+                        {% for room in rooms %}
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100 shadow-sm">
+                                    {% if room.image %}
+                                        <img src="{{ room.image.url }}" class="card-img-top" alt="{{ room.room_type }}" style="height: 200px; object-fit: cover;">
+                                    {% endif %}
+                                    <div class="card-body d-flex flex-column">
+                                        <h5 class="card-title">{{ room.room_type }} ({{ room.get_ac_type_display }})</h5>
+                                        <p class="card-text"><strong>Room No:</strong> {{ room.room_number }}</p>
+                                        <p class="card-text"><strong>Price per night:</strong> LKR {{ room.price_per_night }}</p>
+                                        <div class="mt-auto">
+                                            <a href="{% url 'book_room' room.id %}" class="btn btn-primary">
+                                                <i class="fas fa-calendar-check me-2"></i>Book this Room
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No rooms added yet.</p>
+                {% endif %}
+            {% endif %}
         </div>
-    {% else %}
-        <div class="alert alert-warning">No rooms available at the moment.</div>
-    {% endif %}
+
+        <!-- Sidebar - Extra Info -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm sticky-top" style="top: 100px;">
+                <div class="card-body">
+                    <h5><i class="fas fa-info-circle me-2"></i>Property Info</h5>
+                    {% if hotel.google_location_link %}
+                        <p><strong>Location:</strong> <a href="{{ hotel.google_location_link }}" target="_blank">View on Google Maps</a></p>
+                    {% endif %}
+                    {% if hotel.social_media_link %}
+                        <p><strong>Social:</strong> <a href="{{ hotel.social_media_link }}" target="_blank">Follow us</a></p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

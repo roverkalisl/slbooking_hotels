@@ -19,9 +19,6 @@
                             <div class="col-md-6 mb-4">
                                 <label class="form-label fw-bold">Hotel/Villa Name <span class="text-danger">*</span></label>
                                 {{ form.name }}
-                                {% if form.name.errors %}
-                                    <div class="text-danger small">{{ form.name.errors }}</div>
-                                {% endif %}
                             </div>
                             <div class="col-md-6 mb-4">
                                 <label class="form-label fw-bold">Rented Type <span class="text-danger">*</span></label>
@@ -37,7 +34,7 @@
                         <div class="mb-4">
                             <label class="form-label fw-bold">Description</label>
                             {{ form.description }}
-                            <div class="form-text">Tell guests what makes your place special – swimming pool, beach view, etc.</div>
+                            <div class="form-text">Tell guests what makes your place special!</div>
                         </div>
 
                         <div class="row">
@@ -46,7 +43,7 @@
                                 {{ form.google_location_link }}
                             </div>
                             <div class="col-md-6 mb-4">
-                                <label class="form-label fw-bold">Social Media Link (Facebook/Instagram)</label>
+                                <label class="form-label fw-bold">Social Media Link</label>
                                 {{ form.social_media_link }}
                             </div>
                         </div>
@@ -66,15 +63,15 @@
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label fw-bold">Main Image (Featured Photo)</label>
+                            <label class="form-label fw-bold">Main Image</label>
                             {{ form.main_image }}
-                            <div class="form-text">Best quality photo for listing (pool, exterior, view)</div>
+                            <div class="form-text">Upload a beautiful featured photo</div>
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label fw-bold">Price per Night (LKR) - For Full Villa Rental</label>
+                            <label class="form-label fw-bold">Price per Night (LKR) - Full Villa only</label>
                             {{ form.price_per_night }}
-                            <div class="form-text">Leave blank if only renting individual rooms.</div>
+                            <div class="form-text">Required only if renting as Full Villa</div>
                         </div>
 
                         <div class="d-grid d-md-flex justify-content-md-end gap-3">
