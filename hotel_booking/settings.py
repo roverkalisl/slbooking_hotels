@@ -12,17 +12,17 @@ import dj_database_url
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
+# Secret key
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-this-in-production')
 
-# SECURITY WARNING: don't run with debug turned on in production!
+# Debug
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = ['*']
 
-# Application definition
+# Applications
 INSTALLED_APPS = [
-    'cloudinary_storage',
+    'cloudinary_storage',      # Cloudinary storage (ඉහළම තැන)
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -64,7 +64,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'hotel_booking.wsgi.application'
 
-# Database - Render PostgreSQL or local SQLite fallback
+# Database
 if os.getenv('DATABASE_URL'):
     DATABASES = {
         'default': dj_database_url.config(
@@ -116,7 +116,6 @@ if all(os.getenv(key) for key in ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY',
     }
     MEDIA_URL = '/media/'
 else:
-    # Local fallback
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
     MEDIA_ROOT = BASE_DIR / 'media'
     MEDIA_URL = '/media/'
