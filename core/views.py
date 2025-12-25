@@ -207,4 +207,31 @@ def book_room(request, room_id):
             )
 
         messages.success(request, 'Booking requested! Owner will contact you soon.')
-        return redirect('my_bookings')
+        return redirect('my_bookings')@login_required
+def book_villa(request, hotel_id):
+    hotel = get_object_or_404(Hotel, id=hotel_id, rented_type='full')
+    if request.method == 'POST':
+        form = BookingForm(request.POST)
+        if form.is_valid():
+            check_in = form.cleaned_data['check_in']
+            check_out = form.cleaned_data['check_out']
+            # Availability check for the entire villa
+            overlapping = Booking.objects.filter(
+                hotel=hotel,
+                check_in__lt=check_out,
+                check_out__gt=check_in,
+                status__in=['pending', 'confirmed']
+            ).exists()
+            if overlapping:
+                messages.error(request, 'This villa is not available for the selected dates.')
+            else:
+                booking = form.save(commit=False)
+                booking.customer = request.user
+                booking.hotel = hotel
+                booking.room = None  # Full Villa booking
+                booking.save()
+                messages.success(request, 'Full Villa booking requested successfully!')
+                return redirect('my_bookings')
+    else:
+        form = BookingForm()
+    return render(request, 'core/book_villa.html', {'form': form, 'hotel': hotel})
