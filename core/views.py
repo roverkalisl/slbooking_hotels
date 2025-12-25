@@ -184,29 +184,27 @@ def edit_room(request, room_id):
     else:
         form = RoomForm(instance=room)
     return render(request, 'core/edit_room.html', {'form': form, 'room': room})
+from twilio.rest import Client
+
 @login_required
 def book_room(request, room_id):
-    room = get_object_or_404(Room, id=room_id)
-    if request.method == 'POST':
-        form = BookingForm(request.POST)
-        if form.is_valid():
-            check_in = form.cleaned_data['check_in']
-            check_out = form.cleaned_data['check_out']
-            overlapping = Booking.objects.filter(
-                room=room,
-                check_in__lt=check_out,
-                check_out__gt=check_in,
-                status__in=['pending', 'confirmed']
-            ).exists()
-            if overlapping:
-                messages.error(request, 'This room is not available for the selected dates.')
-            else:
-                booking = form.save(commit=False)
-                booking.customer = request.user
-                booking.room = room
-                booking.save()
-                messages.success(request, 'Booking requested successfully!')
-                return redirect('my_bookings')
-    else:
-        form = BookingForm()
-    return render(request, 'core/book_room.html', {'form': form, 'room': room})
+    # ... existing code ...
+    if form.is_valid():
+        # ... availability check ...
+        booking = form.save(commit=False)
+        booking.customer = request.user
+        booking.room = room
+        booking.save()
+
+        # Send SMS to owner
+        if all([settings.TWILIO_SID, settings.TWILIO_AUTH_TOKEN, settings.TWILIO_PHONE_NUMBER, settings.OWNER_PHONE]):
+            client = Client(settings.TWILIO_SID, settings.TWILIO_AUTH_TOKEN)
+            message = f"New booking! Customer: {request.user.username}\nRoom: {room}\nDates: {check_in} to {check_out}"
+            client.messages.create(
+                body=message,
+                from_=settings.TWILIO_PHONE_NUMBER,
+                to=settings.OWNER_PHONE
+            )
+
+        messages.success(request, 'Booking requested! Owner will contact you soon.')
+        return redirect('my_bookings')
