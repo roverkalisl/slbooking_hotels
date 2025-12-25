@@ -208,7 +208,7 @@ def book_room(request, room_id):
 
         messages.success(request, 'Booking requested! Owner will contact you soon.')
         return redirect('my_bookings')    
-    @login_required
+   @login_required
 def book_villa(request, hotel_id):
     hotel = get_object_or_404(Hotel, id=hotel_id, rented_type='full')
     if request.method == 'POST':
