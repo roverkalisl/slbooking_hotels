@@ -1,8 +1,10 @@
 from django.urls import path
 from . import views
+from django.contrib.auth import views as auth_views
+
 
 urlpatterns = [
-    path('', views.home, name='home'),
+    path('', views.home, name='home'),path('login/', auth_views.LoginView.as_view(template_name='core/login.html'), name='login'),
     path('register/', views.register, name='register'),
     path('login/', views.login_view, name='login'),  # if you have custom login
     path('logout/', views.logout_view, name='logout'),  # if custom
@@ -16,3 +18,5 @@ urlpatterns = [
     path('owner/edit-hotel/<int:hotel_id>/', views.edit_hotel, name='edit_hotel'),
     path('owner/hotel/<int:hotel_id>/add-room/', views.add_room, name='add_room'),
 ]
+
+
