@@ -147,3 +147,8 @@ if not DEBUG:
 
 # Email backend (development console)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+TWILIO_SID = os.getenv('TWILIO_SID')
+TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
+TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER')
+OWNER_PHONE = os.getenv('OWNER_PHONE')

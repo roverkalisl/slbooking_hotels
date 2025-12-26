@@ -1,12 +1,11 @@
 # core/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import views as auth_views
 from django.contrib import messages
 from django.db.models import Q
-from django.contrib.auth import authenticate, login, logout
-from .models import Hotel, Room, Booking, Profile
+from .models import Hotel, Room, Booking
 from .forms import RegistrationForm, HotelForm, RoomForm, BookingForm
-from datetime import date
 
 def home(request):
     hotels = Hotel.objects.all()[:6]  # Featured hotels
@@ -16,33 +15,12 @@ def register(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            profile, created = Profile.objects.get_or_create(user=user)
-            profile.role = form.cleaned_data['role']
-            profile.phone = form.cleaned_data.get('phone')
-            profile.save()
+            form.save()
             messages.success(request, 'Registration successful! You can now log in.')
             return redirect('login')
     else:
         form = RegistrationForm()
     return render(request, 'core/register.html', {'form': form})
-
-def login_view(request):
-    if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return redirect('home')
-        else:
-            messages.error(request, 'Invalid username or password.')
-    return render(request, 'core/login.html')
-
-def logout_view(request):
-    logout(request)
-    messages.success(request, 'You have been logged out.')
-    return redirect('home')
 
 def search_hotels(request):
     query = request.GET.get('q', '')
@@ -53,7 +31,7 @@ def search_hotels(request):
 
 def hotel_detail(request, hotel_id):
     hotel = get_object_or_404(Hotel, id=hotel_id)
-    rooms = hotel.rooms.all()  # All rooms shown (no availability filter)
+    rooms = hotel.rooms.all() if hotel.rented_type == 'rooms' else None
     is_full_villa = hotel.rented_type == 'full'
     return render(request, 'core/hotel_detail.html', {
         'hotel': hotel,
@@ -81,6 +59,7 @@ def book_room(request, room_id):
                 booking = form.save(commit=False)
                 booking.customer = request.user
                 booking.room = room
+                booking.hotel = room.hotel
                 booking.save()
                 messages.success(request, 'Booking requested successfully!')
                 return redirect('my_bookings')
@@ -108,7 +87,7 @@ def book_villa(request, hotel_id):
                 booking = form.save(commit=False)
                 booking.customer = request.user
                 booking.hotel = hotel
-                booking.room = None  # Full Villa
+                booking.room = None
                 booking.save()
                 messages.success(request, 'Full Villa booking requested successfully!')
                 return redirect('my_bookings')
@@ -118,20 +97,20 @@ def book_villa(request, hotel_id):
 
 @login_required
 def my_bookings(request):
-    bookings = Booking.objects.filter(customer=request.user)
+    bookings = Booking.objects.filter(customer=request.user).order_by('-id')
     return render(request, 'core/my_bookings.html', {'bookings': bookings})
 
 @login_required
 def owner_dashboard(request):
-    if request.user.profile.role != 'owner':
-        messages.error(request, 'Access denied.')
+    if not request.user.profile.role == 'owner':
+        messages.error(request, 'Access denied. Owners only.')
         return redirect('home')
     hotels = Hotel.objects.filter(owner=request.user)
     return render(request, 'core/owner_dashboard.html', {'hotels': hotels})
 
 @login_required
 def add_hotel(request):
-    if request.user.profile.role != 'owner':
+    if not request.user.profile.role == 'owner':
         return redirect('home')
     if request.method == 'POST':
         form = HotelForm(request.POST, request.FILES)
@@ -139,7 +118,7 @@ def add_hotel(request):
             hotel = form.save(commit=False)
             hotel.owner = request.user
             hotel.save()
-            form.save_m2m()  # facilities
+            form.save_m2m()  # for facilities
             messages.success(request, 'Hotel added successfully!')
             return redirect('owner_dashboard')
     else:
