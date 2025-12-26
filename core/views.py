@@ -160,3 +160,13 @@ def owner_bookings(request):
     # Owner එකගේ hotels වල bookings ටික
     bookings = Booking.objects.filter(room__hotel__owner=request.user).order_by('-id')
     return render(request, 'core/owner_bookings.html', {'bookings': bookings})
+@login_required
+def cancel_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id, customer=request.user)
+    if booking.status != 'cancelled':
+        booking.status = 'cancelled'
+        booking.save()
+        messages.success(request, 'Your booking has been cancelled.')
+    else:
+        messages.info(request, 'This booking is already cancelled.')
+    return redirect('my_bookings')

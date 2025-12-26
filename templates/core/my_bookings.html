@@ -1,38 +1,76 @@
 {% extends 'core/base.html' %}
+{% load static %}
 
 {% block title %}My Bookings{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h1 class="display-5 text-primary mb-4">My Bookings</h1>
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <h1 class="display-5 text-primary mb-4 text-center"><i class="fas fa-calendar-check me-3"></i>My Bookings</h1>
 
-    {% if bookings %}
-        <div class="row">
-            {% for booking in bookings %}
-                <div class="col-md-6 col-lg-4 mb-4">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-info text-white">
-                            <h5 class="mb-0">{{ booking.room.hotel.name }} - {{ booking.room.room_number }}</h5>
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% if bookings %}
+                <div class="row">
+                    {% for booking in bookings %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card shadow-sm h-100 border-0">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0">{{ booking.room.hotel.name }} {% if not booking.room %} (Entire Villa) {% endif %}</h5>
+                                </div>
+                                <div class="card-body d-flex flex-column">
+                                    {% if booking.room %}
+                                        <p class="card-text"><strong>Room:</strong> {{ booking.room.room_number }} ({{ booking.room.get_ac_type_display }})</p>
+                                    {% else %}
+                                        <p class="card-text"><strong>Type:</strong> Entire Villa Booking</p>
+                                    {% endif %}
+                                    <p class="card-text"><strong>Check-in:</strong> {{ booking.check_in }}</p>
+                                    <p class="card-text"><strong>Check-out:</strong> {{ booking.check_out }}</p>
+                                    <p class="card-text"><strong>Status:</strong>
+                                        <span class="badge bg-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'cancelled' %}danger{% else %}warning{% endif %}">
+                                            {{ booking.get_status_display }}
+                                        </span>
+                                    </p>
+                                    <p class="card-text"><strong>Total Price:</strong> LKR {{ booking.total_price|default:"Pending" }}</p>
+
+                                    <div class="mt-auto">
+                                        {% if booking.status == 'pending' %}
+                                            <a href="{% url 'cancel_booking' booking.id %}" class="btn btn-danger btn-sm w-100" 
+                                               onclick="return confirm('Are you sure you want to cancel this booking?')">
+                                                <i class="fas fa-times me-2"></i>Cancel Booking
+                                            </a>
+                                        {% elif booking.status == 'cancelled' %}
+                                            <span class="text-muted">Booking Cancelled</span>
+                                        {% else %}
+                                            <span class="text-success"><i class="fas fa-check me-2"></i>Confirmed</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <p><strong>Check-in:</strong> {{ booking.check_in }}</p>
-                            <p><strong>Check-out:</strong> {{ booking.check_out }}</p>
-                            <p><strong>Status:</strong> 
-                                <span class="badge bg-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'cancelled' %}danger{% else %}warning{% endif %}">
-                                    {{ booking.get_status_display }}
-                                </span>
-                            </p>
-                            <p><strong>Total Price:</strong> Rs. Pending</p>
-                            {% if booking.status != 'cancelled' %}
-                                <a href="{% url 'cancel_booking' booking.id %}" class="btn btn-danger btn-sm">Cancel Booking</a>
-                            {% endif %}
-                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <div class="alert alert-info d-inline-block">
+                        <i class="fas fa-info-circle me-2"></i>You have no bookings yet.
+                    </div>
+                    <div class="mt-4">
+                        <a href="{% url 'home' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-search me-2"></i>Browse Hotels
+                        </a>
                     </div>
                 </div>
-            {% endfor %}
+            {% endif %}
         </div>
-    {% else %}
-        <div class="alert alert-info">You have no bookings yet.</div>
-    {% endif %}
+    </div>
 </div>
 {% endblock %}
