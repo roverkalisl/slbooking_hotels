@@ -22,11 +22,11 @@
                         {% csrf_token %}
                         <div class="mb-4">
                             <label class="form-label fw-bold">Username</label>
-                            {{ form.username }}
+                            <input type="text" name="username" class="form-control form-control-lg" required autofocus>
                         </div>
                         <div class="mb-4">
                             <label class="form-label fw-bold">Password</label>
-                            {{ form.password }}
+                            <input type="password" name="password" class="form-control form-control-lg" required>
                         </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary btn-lg">
