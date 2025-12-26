@@ -32,7 +32,12 @@ class Hotel(models.Model):
     social_media_link = models.URLField(blank=True, null=True)
     rented_type = models.CharField(max_length=20, choices=RENTED_TYPE_CHOICES, default='rooms')
     facilities = models.ManyToManyField(Facility, blank=True)
+    #main_image = models.ImageField(upload_to='hotels/', blank=True, null=True)
     main_image = models.ImageField(upload_to='hotels/', blank=True, null=True)
+    photo1 = models.ImageField(upload_to='hotels/', blank=True, null=True)
+    photo2 = models.ImageField(upload_to='hotels/', blank=True, null=True)
+    photo3 = models.ImageField(upload_to='hotels/', blank=True, null=True)
+    photo4 = models.ImageField(upload_to='hotels/', blank=True, null=True)
     price_per_night = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
 
     def __str__(self):

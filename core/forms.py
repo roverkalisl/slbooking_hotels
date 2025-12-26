@@ -15,7 +15,7 @@ class HotelForm(forms.ModelForm):
     class Meta:
         model = Hotel
         fields = ['name', 'address', 'description', 'google_location_link', 'social_media_link', 
-                  'rented_type', 'facilities', 'main_image', 'price_per_night']
+                  'rented_type', 'facilities', 'main_image', 'photo1', 'photo2', 'photo3', 'photo4', 'price_per_night']
         widgets = {
             'description': forms.Textarea(attrs={'rows': 6}),
             'facilities': forms.CheckboxSelectMultiple(),
