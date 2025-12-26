@@ -1,10 +1,11 @@
 {% extends 'core/base.html' %}
+{% load static %}
 
-{% block title %}Owner Bookings{% endblock %}
+{% block title %}My Hotel Bookings{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
-    <h1 class="display-5 text-primary mb-4">Bookings for Your Hotels</h1>
+    <h1 class="display-5 text-primary mb-4">My Hotel Bookings</h1>
 
     {% if bookings %}
         <div class="table-responsive">
@@ -17,7 +18,7 @@
                         <th>Check-in</th>
                         <th>Check-out</th>
                         <th>Status</th>
-                        <th>Actions</th>
+                        <th>Total Price</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -25,27 +26,30 @@
                         <tr>
                             <td>{{ booking.customer.username }}</td>
                             <td>{{ booking.room.hotel.name }}</td>
-                            <td>{{ booking.room.room_number }}</td>
+                            <td>{{ booking.room.room_number|default:"Entire Villa" }}</td>
                             <td>{{ booking.check_in }}</td>
                             <td>{{ booking.check_out }}</td>
                             <td>
-                                <span class="badge bg-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'cancelled' %}danger{% else %}warning{% endif %}">
+                                <span class="badge bg-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'pending' %}warning{% else %}danger{% endif %}">
                                     {{ booking.get_status_display }}
                                 </span>
                             </td>
-                            <td>
-                                {% if booking.status == 'pending' %}
-                                    <a href="{% url 'confirm_booking' booking.id %}" class="btn btn-sm btn-success">Confirm</a>
-                                    <a href="{% url 'reject_booking' booking.id %}" class="btn btn-sm btn-danger">Reject</a>
-                                {% endif %}
-                            </td>
+                            <td>LKR {{ booking.total_price|default:"0.00" }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     {% else %}
-        <div class="alert alert-info">No bookings yet for your hotels.</div>
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>No bookings yet for your hotels.
+        </div>
     {% endif %}
+
+    <div class="mt-4">
+        <a href="{% url 'owner_dashboard' %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
 </div>
 {% endblock %}

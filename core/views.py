@@ -152,3 +152,11 @@ def add_room(request, hotel_id):
     else:
         form = RoomForm()
     return render(request, 'core/add_room.html', {'form': form, 'hotel': hotel})
+@login_required
+def owner_bookings(request):
+    if request.user.profile.role != 'owner':
+        messages.error(request, 'Access denied.')
+        return redirect('home')
+    # Owner එකගේ hotels වල bookings ටික
+    bookings = Booking.objects.filter(room__hotel__owner=request.user).order_by('-id')
+    return render(request, 'core/owner_bookings.html', {'bookings': bookings})
