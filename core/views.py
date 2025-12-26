@@ -170,3 +170,24 @@ def cancel_booking(request, booking_id):
     else:
         messages.info(request, 'This booking is already cancelled.')
     return redirect('my_bookings')
+@login_required
+def confirm_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id, room__hotel__owner=request.user)
+    if booking.status == 'pending':
+        booking.status = 'confirmed'
+        booking.save()
+        messages.success(request, 'Booking confirmed successfully!')
+    else:
+        messages.info(request, 'This booking is already processed.')
+    return redirect('owner_bookings')
+
+@login_required
+def reject_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id, room__hotel__owner=request.user)
+    if booking.status == 'pending':
+        booking.status = 'cancelled'
+        booking.save()
+        messages.success(request, 'Booking rejected.')
+    else:
+        messages.info(request, 'This booking is already processed.')
+    return redirect('owner_bookings')

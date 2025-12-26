@@ -85,6 +85,16 @@
         </div>
 
         <!-- Sidebar - Extra Info -->
+<div class="mb-4">
+    <h5><i class="fas fa-phone me-2"></i>Contact Owner</h5>
+    <p>
+        <strong>Phone:</strong> 
+        {% if hotel.owner.profile.phone %}
+            {{ hotel.owner.profile.phone }}
+        {% else %}
+            Not provided
+        {% endif %}
+    </p>
         <div class="col-lg-4">
             <div class="card shadow-sm sticky-top" style="top: 100px;">
                 <div class="card-body">
@@ -96,6 +106,8 @@
                         <p><strong>Social:</strong> <a href="{{ hotel.social_media_link }}" target="_blank">Follow us</a></p>
                     {% endif %}
                 </div>
+</div>
+
             </div>
         </div>
     </div>

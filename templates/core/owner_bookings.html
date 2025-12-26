@@ -4,52 +4,93 @@
 {% block title %}My Hotel Bookings{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h1 class="display-5 text-primary mb-4">My Hotel Bookings</h1>
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <h1 class="display-5 text-primary mb-4 text-center">
+                <i class="fas fa-calendar-check me-3"></i>My Hotel Bookings
+            </h1>
 
-    {% if bookings %}
-        <div class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Customer</th>
-                        <th>Hotel</th>
-                        <th>Room</th>
-                        <th>Check-in</th>
-                        <th>Check-out</th>
-                        <th>Status</th>
-                        <th>Total Price</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for booking in bookings %}
-                        <tr>
-                            <td>{{ booking.customer.username }}</td>
-                            <td>{{ booking.room.hotel.name }}</td>
-                            <td>{{ booking.room.room_number|default:"Entire Villa" }}</td>
-                            <td>{{ booking.check_in }}</td>
-                            <td>{{ booking.check_out }}</td>
-                            <td>
-                                <span class="badge bg-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'pending' %}warning{% else %}danger{% endif %}">
-                                    {{ booking.get_status_display }}
-                                </span>
-                            </td>
-                            <td>LKR {{ booking.total_price|default:"0.00" }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% else %}
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle me-2"></i>No bookings yet for your hotels.
-        </div>
-    {% endif %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
 
-    <div class="mt-4">
-        <a href="{% url 'owner_dashboard' %}" class="btn btn-outline-primary">
-            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-        </a>
+            {% if bookings %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>Customer</th>
+                                <th>Hotel</th>
+                                <th>Room / Type</th>
+                                <th>Check-in</th>
+                                <th>Check-out</th>
+                                <th>Total Price</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in bookings %}
+                                <tr>
+                                    <td>{{ booking.customer.username }}<br><small class="text-muted">{{ booking.customer.profile.phone|default:"No phone" }}</small></td>
+                                    <td>{{ booking.room.hotel.name|default:booking.hotel.name }}</td>
+                                    <td>
+                                        {% if booking.room %}
+                                            {{ booking.room.room_number }} ({{ booking.room.get_ac_type_display }})
+                                        {% else %}
+                                            <strong>Entire Villa</strong>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ booking.check_in }}</td>
+                                    <td>{{ booking.check_out }}</td>
+                                    <td>LKR {{ booking.total_price|default:"Pending" }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'pending' %}warning{% else %}danger{% endif %} fs-6">
+                                            {{ booking.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if booking.status == 'pending' %}
+                                            <a href="{% url 'confirm_booking' booking.id %}" class="btn btn-success btn-sm me-2">
+                                                <i class="fas fa-check"></i> Confirm
+                                            </a>
+                                            <a href="{% url 'reject_booking' booking.id %}" class="btn btn-danger btn-sm"
+                                               onclick="return confirm('Are you sure you want to reject this booking?')">
+                                                <i class="fas fa-times"></i> Reject
+                                            </a>
+                                        {% elif booking.status == 'confirmed' %}
+                                            <span class="text-success"><i class="fas fa-check"></i> Confirmed</span>
+                                        {% else %}
+                                            <span class="text-danger"><i class="fas fa-times"></i> Rejected</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <div class="alert alert-info d-inline-block px-5 py-4">
+                        <i class="fas fa-info-circle fa-3x mb-3 text-info"></i>
+                        <h4>No bookings yet for your hotels.</h4>
+                        <p class="mb-4">Bookings will appear here when customers book your properties.</p>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="text-center mt-4">
+                <a href="{% url 'owner_dashboard' %}" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
