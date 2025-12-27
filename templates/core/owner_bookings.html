@@ -6,7 +6,7 @@
 {% block content %}
 <div class="container mt-5 mb-5">
     <div class="row justify-content-center">
-        <div class="col-lg-12">
+        <div class="col-lg-11">
             <h1 class="display-5 text-primary mb-4 text-center">
                 <i class="fas fa-calendar-check me-3"></i>My Hotel Bookings
             </h1>
@@ -26,8 +26,8 @@
                         <thead class="table-primary">
                             <tr>
                                 <th>Customer</th>
-                                <th>Hotel</th>
-                                <th>Room / Type</th>
+                                <th>Property</th>
+                                <th>Type</th>
                                 <th>Check-in</th>
                                 <th>Check-out</th>
                                 <th>Total Price</th>
@@ -38,13 +38,26 @@
                         <tbody>
                             {% for booking in bookings %}
                                 <tr>
-                                    <td>{{ booking.customer.username }}<br><small class="text-muted">{{ booking.customer.profile.phone|default:"No phone" }}</small></td>
-                                    <td>{{ booking.room.hotel.name|default:booking.hotel.name }}</td>
+                                    <td>
+                                        {{ booking.customer.username }}
+                                        <br>
+                                        <small class="text-muted">
+                                            {{ booking.customer.profile.phone|default:"No phone provided" }}
+                                        </small>
+                                    </td>
                                     <td>
                                         {% if booking.room %}
-                                            {{ booking.room.room_number }} ({{ booking.room.get_ac_type_display }})
+                                            {{ booking.room.hotel.name }}
                                         {% else %}
-                                            <strong>Entire Villa</strong>
+                                            {{ booking.hotel.name }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if booking.room %}
+                                            Room {{ booking.room.room_number }}<br>
+                                            <small class="text-muted">({{ booking.room.get_ac_type_display }})</small>
+                                        {% else %}
+                                            <strong class="text-success">Entire Villa</strong>
                                         {% endif %}
                                     </td>
                                     <td>{{ booking.check_in }}</td>
@@ -57,17 +70,19 @@
                                     </td>
                                     <td>
                                         {% if booking.status == 'pending' %}
-                                            <a href="{% url 'confirm_booking' booking.id %}" class="btn btn-success btn-sm me-2">
-                                                <i class="fas fa-check"></i> Confirm
-                                            </a>
-                                            <a href="{% url 'reject_booking' booking.id %}" class="btn btn-danger btn-sm"
-                                               onclick="return confirm('Are you sure you want to reject this booking?')">
-                                                <i class="fas fa-times"></i> Reject
-                                            </a>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="{% url 'confirm_booking' booking.id %}" class="btn btn-success">
+                                                    <i class="fas fa-check"></i> Confirm
+                                                </a>
+                                                <a href="{% url 'reject_booking' booking.id %}" class="btn btn-danger"
+                                                   onclick="return confirm('Are you sure you want to reject this booking?')">
+                                                    <i class="fas fa-times"></i> Reject
+                                                </a>
+                                            </div>
                                         {% elif booking.status == 'confirmed' %}
-                                            <span class="text-success"><i class="fas fa-check"></i> Confirmed</span>
+                                            <span class="text-success fw-bold"><i class="fas fa-check me-1"></i>Confirmed</span>
                                         {% else %}
-                                            <span class="text-danger"><i class="fas fa-times"></i> Rejected</span>
+                                            <span class="text-danger fw-bold"><i class="fas fa-times me-1"></i>Rejected</span>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -75,56 +90,18 @@
                         </tbody>
                     </table>
                 </div>
-
-                <!-- Bookings Calendar -->
-                <div class="card shadow-sm">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Bookings Calendar</h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="calendar"></div>
-                    </div>
-                </div>
-
-                <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    var calendarEl = document.getElementById('calendar');
-                    var calendar = new FullCalendar.Calendar(calendarEl, {
-                        initialView: 'dayGridMonth',
-                        height: 'auto',
-                        headerToolbar: {
-                            left: 'prev,next today',
-                            center: 'title',
-                            right: 'dayGridMonth,timeGridWeek,timeGridDay'
-                        },
-                        events: [
-                            {% for booking in bookings %}
-                                {
-                                    title: '{{ booking.customer.username }} - {% if booking.room %}{{ booking.room.hotel.name }} Room {{ booking.room.room_number }}{% else %}{{ booking.hotel.name }} (Entire Villa){% endif %}',
-                                    start: '{{ booking.check_in }}',
-                                    end: '{{ booking.check_out|add:"1" }}',  // FullCalendar end date exclusive
-                                    color: '{% if booking.status == "confirmed" %}#28a745{% elif booking.status == "pending" %}#ffc107{% else %}#dc3545{% endif %}',
-                                    textColor: 'white',
-                                    borderColor: 'black'
-                                },
-                            {% endfor %}
-                        ]
-                    });
-                    calendar.render();
-                });
-                </script>
             {% else %}
                 <div class="text-center py-5">
                     <div class="alert alert-info d-inline-block px-5 py-4">
                         <i class="fas fa-info-circle fa-3x mb-3 text-info"></i>
-                        <h4>No bookings yet for your hotels.</h4>
-                        <p class="mb-4">Bookings will appear here when customers book your properties.</p>
+                        <h4>No bookings yet for your properties.</h4>
+                        <p class="mb-4">Bookings will appear here when customers book your hotels or villas.</p>
                     </div>
                 </div>
             {% endif %}
 
             <div class="text-center mt-4">
-                <a href="{% url 'owner_dashboard' %}" class="btn btn-outline-primary btn-lg">
+                <a href="{% url 'owner_dashboard' %}" class="btn btn-outline-primary btn-lg px-5">
                     <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
                 </a>
             </div>
