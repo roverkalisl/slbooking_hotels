@@ -157,8 +157,16 @@ def owner_bookings(request):
     if request.user.profile.role != 'owner':
         messages.error(request, 'Access denied.')
         return redirect('home')
-    # Owner එකගේ hotels වල bookings ටික
-    bookings = Booking.objects.filter(room__hotel__owner=request.user).order_by('-id')
+    
+    # Room bookings (individual rooms)
+    room_bookings = Booking.objects.filter(room__hotel__owner=request.user)
+    
+    # Entire Villa bookings (room=None, hotel__owner)
+    villa_bookings = Booking.objects.filter(hotel__owner=request.user, room=None)
+    
+    # Combine both
+    bookings = (room_bookings | villa_bookings).distinct().order_by('-id')
+    
     return render(request, 'core/owner_bookings.html', {'bookings': bookings})
 @login_required
 def cancel_booking(request, booking_id):
