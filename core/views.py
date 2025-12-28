@@ -109,7 +109,7 @@ def cancel_booking(request, booking_id):
         messages.success(request, 'Your booking has been cancelled.')
     else:
         messages.info(request, 'This booking cannot be cancelled.')
-    return redirect('my_bookings')
+        return redirect('my_bookings')
 
 @login_required
 def owner_dashboard(request):
@@ -118,7 +118,6 @@ def owner_dashboard(request):
         return redirect('home')
     hotels = Hotel.objects.filter(owner=request.user)
     return render(request, 'core/owner_dashboard.html', {'hotels': hotels})
-
 @login_required
 def owner_bookings(request):
     if request.user.profile.role != 'owner':
@@ -162,23 +161,7 @@ def reject_booking(request, booking_id):
         messages.success(request, f'Booking #{booking.id} rejected.')
     else:
         messages.info(request, 'This booking is already processed.')
-    return redirect('owner_bookings')@login_required
-def add_hotel(request):
-    if request.user.profile.role != 'owner':
-        return redirect('home')
-    if request.method == 'POST':
-        form = HotelForm(request.POST, request.FILES)
-        if form.is_valid():
-            hotel = form.save(commit=False)
-            hotel.owner = request.user
-            hotel.save()
-            form.save_m2m()
-            messages.success(request, 'Hotel added successfully!')
-            return redirect('owner_dashboard')
-    else:
-        form = HotelForm()
-    return render(request, 'core/add_hotel.html', {'form': form})
-
+    return redirect('owner_bookings')
 @login_required
 def edit_hotel(request, hotel_id):
     hotel = get_object_or_404(Hotel, id=hotel_id, owner=request.user)
@@ -191,7 +174,6 @@ def edit_hotel(request, hotel_id):
     else:
         form = HotelForm(instance=hotel)
     return render(request, 'core/edit_hotel.html', {'form': form, 'hotel': hotel})
-
 @login_required
 def add_room(request, hotel_id):
     hotel = get_object_or_404(Hotel, id=hotel_id, owner=request.user)
