@@ -162,9 +162,7 @@ def reject_booking(request, booking_id):
         messages.success(request, f'Booking #{booking.id} rejected.')
     else:
         messages.info(request, 'This booking is already processed.')
-    return redirect('owner_bookings')
-
-@login_required
+    return redirect('owner_bookings')@login_required
 def add_hotel(request):
     if request.user.profile.role != 'owner':
         return redirect('home')
