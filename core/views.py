@@ -135,7 +135,7 @@ def owner_bookings(request):
 def confirm_booking(request, booking_id):
     booking = get_object_or_404(
         Booking,
-        id=booking_id,
+        Q(id=booking_id),
         Q(room__hotel__owner=request.user) | Q(hotel__owner=request.user, room=None)
     )
     
@@ -151,7 +151,7 @@ def confirm_booking(request, booking_id):
 def reject_booking(request, booking_id):
     booking = get_object_or_404(
         Booking,
-        id=booking_id,
+        Q(id=booking_id),
         Q(room__hotel__owner=request.user) | Q(hotel__owner=request.user, room=None)
     )
     
