@@ -180,15 +180,13 @@ def cancel_booking(request, booking_id):
     return redirect('my_bookings')
 @login_required
 def confirm_booking(request, booking_id):
-    try:
-        booking = Booking.objects.get(id=booking_id, room__hotel__owner=request.user)
-        # Entire Villa support
-        if not booking.room:
-            booking = Booking.objects.get(id=booking_id, hotel__owner=request.user, room=None)
-    except Booking.DoesNotExist:
-        messages.error(request, 'Booking not found or you do not have permission to confirm it.')
-        return redirect('owner_bookings')
-
+    # Room booking or Entire Villa booking
+    booking = get_object_or_404(
+        Booking,
+        id=booking_id,
+        Q(room__hotel__owner=request.user) | Q(hotel__owner=request.user, room=None)
+    )
+    
     if booking.status == 'pending':
         booking.status = 'confirmed'
         booking.save()
@@ -199,14 +197,12 @@ def confirm_booking(request, booking_id):
 
 @login_required
 def reject_booking(request, booking_id):
-    try:
-        booking = Booking.objects.get(id=booking_id, room__hotel__owner=request.user)
-        if not booking.room:
-            booking = Booking.objects.get(id=booking_id, hotel__owner=request.user, room=None)
-    except Booking.DoesNotExist:
-        messages.error(request, 'Booking not found or you do not have permission to reject it.')
-        return redirect('owner_bookings')
-
+    booking = get_object_or_404(
+        Booking,
+        id=booking_id,
+        Q(room__hotel__owner=request.user) | Q(hotel__owner=request.user, room=None)
+    )
+    
     if booking.status == 'pending':
         booking.status = 'cancelled'
         booking.save()
