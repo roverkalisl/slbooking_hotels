@@ -180,22 +180,37 @@ def cancel_booking(request, booking_id):
     return redirect('my_bookings')
 @login_required
 def confirm_booking(request, booking_id):
-    booking = get_object_or_404(Booking, id=booking_id, room__hotel__owner=request.user)
+    try:
+        booking = Booking.objects.get(id=booking_id, room__hotel__owner=request.user)
+        # Entire Villa support
+        if not booking.room:
+            booking = Booking.objects.get(id=booking_id, hotel__owner=request.user, room=None)
+    except Booking.DoesNotExist:
+        messages.error(request, 'Booking not found or you do not have permission to confirm it.')
+        return redirect('owner_bookings')
+
     if booking.status == 'pending':
         booking.status = 'confirmed'
         booking.save()
-        messages.success(request, 'Booking confirmed successfully!')
+        messages.success(request, f'Booking #{booking.id} confirmed successfully!')
     else:
         messages.info(request, 'This booking is already processed.')
     return redirect('owner_bookings')
 
 @login_required
 def reject_booking(request, booking_id):
-    booking = get_object_or_404(Booking, id=booking_id, room__hotel__owner=request.user)
+    try:
+        booking = Booking.objects.get(id=booking_id, room__hotel__owner=request.user)
+        if not booking.room:
+            booking = Booking.objects.get(id=booking_id, hotel__owner=request.user, room=None)
+    except Booking.DoesNotExist:
+        messages.error(request, 'Booking not found or you do not have permission to reject it.')
+        return redirect('owner_bookings')
+
     if booking.status == 'pending':
         booking.status = 'cancelled'
         booking.save()
-        messages.success(request, 'Booking rejected.')
+        messages.success(request, f'Booking #{booking.id} rejected.')
     else:
         messages.info(request, 'This booking is already processed.')
     return redirect('owner_bookings')
