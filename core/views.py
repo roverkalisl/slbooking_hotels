@@ -101,16 +101,72 @@ def my_bookings(request):
     return render(request, 'core/my_bookings.html', {'bookings': bookings})
 
 @login_required
+def cancel_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id, customer=request.user)
+    if booking.status == 'pending':
+        booking.status = 'cancelled'
+        booking.save()
+        messages.success(request, 'Your booking has been cancelled.')
+    else:
+        messages.info(request, 'This booking cannot be cancelled.')
+    return redirect('my_bookings')
+
+@login_required
 def owner_dashboard(request):
-    if not request.user.profile.role == 'owner':
+    if request.user.profile.role != 'owner':
         messages.error(request, 'Access denied. Owners only.')
         return redirect('home')
     hotels = Hotel.objects.filter(owner=request.user)
     return render(request, 'core/owner_dashboard.html', {'hotels': hotels})
 
 @login_required
+def owner_bookings(request):
+    if request.user.profile.role != 'owner':
+        messages.error(request, 'Access denied.')
+        return redirect('home')
+    
+    # All bookings for owner's hotels (rooms + entire villa)
+    bookings = Booking.objects.filter(
+        Q(room__hotel__owner=request.user) | Q(hotel__owner=request.user, room=None)
+    ).order_by('-id')
+    
+    return render(request, 'core/owner_bookings.html', {'bookings': bookings})
+
+@login_required
+def confirm_booking(request, booking_id):
+    booking = get_object_or_404(
+        Booking,
+        id=booking_id,
+        Q(room__hotel__owner=request.user) | Q(hotel__owner=request.user, room=None)
+    )
+    
+    if booking.status == 'pending':
+        booking.status = 'confirmed'
+        booking.save()
+        messages.success(request, f'Booking #{booking.id} confirmed successfully!')
+    else:
+        messages.info(request, 'This booking is already processed.')
+    return redirect('owner_bookings')
+
+@login_required
+def reject_booking(request, booking_id):
+    booking = get_object_or_404(
+        Booking,
+        id=booking_id,
+        Q(room__hotel__owner=request.user) | Q(hotel__owner=request.user, room=None)
+    )
+    
+    if booking.status == 'pending':
+        booking.status = 'cancelled'
+        booking.save()
+        messages.success(request, f'Booking #{booking.id} rejected.')
+    else:
+        messages.info(request, 'This booking is already processed.')
+    return redirect('owner_bookings')
+
+@login_required
 def add_hotel(request):
-    if not request.user.profile.role == 'owner':
+    if request.user.profile.role != 'owner':
         return redirect('home')
     if request.method == 'POST':
         form = HotelForm(request.POST, request.FILES)
@@ -118,7 +174,7 @@ def add_hotel(request):
             hotel = form.save(commit=False)
             hotel.owner = request.user
             hotel.save()
-            form.save_m2m()  # for facilities
+            form.save_m2m()
             messages.success(request, 'Hotel added successfully!')
             return redirect('owner_dashboard')
     else:
@@ -152,61 +208,3 @@ def add_room(request, hotel_id):
     else:
         form = RoomForm()
     return render(request, 'core/add_room.html', {'form': form, 'hotel': hotel})
-@login_required
-def owner_bookings(request):
-    if request.user.profile.role != 'owner':
-        messages.error(request, 'Access denied.')
-        return redirect('home')
-    
-    # Room bookings (individual rooms)
-    room_bookings = Booking.objects.filter(room__hotel__owner=request.user)
-    
-    # Entire Villa bookings (room=None, hotel__owner)
-    villa_bookings = Booking.objects.filter(hotel__owner=request.user, room=None)
-    
-    # Combine both
-    bookings = (room_bookings | villa_bookings).distinct().order_by('-id')
-    
-    return render(request, 'core/owner_bookings.html', {'bookings': bookings})
-@login_required
-def cancel_booking(request, booking_id):
-    booking = get_object_or_404(Booking, id=booking_id, customer=request.user)
-    if booking.status != 'cancelled':
-        booking.status = 'cancelled'
-        booking.save()
-        messages.success(request, 'Your booking has been cancelled.')
-    else:
-        messages.info(request, 'This booking is already cancelled.')
-    return redirect('my_bookings')
-@login_required
-def confirm_booking(request, booking_id):
-    # Room booking or Entire Villa booking
-    booking = get_object_or_404(
-        Booking,
-        id=booking_id,
-        Q(room__hotel__owner=request.user) | Q(hotel__owner=request.user, room=None)
-    )
-    
-    if booking.status == 'pending':
-        booking.status = 'confirmed'
-        booking.save()
-        messages.success(request, f'Booking #{booking.id} confirmed successfully!')
-    else:
-        messages.info(request, 'This booking is already processed.')
-    return redirect('owner_bookings')
-
-@login_required
-def reject_booking(request, booking_id):
-    booking = get_object_or_404(
-        Booking,
-        id=booking_id,
-        Q(room__hotel__owner=request.user) | Q(hotel__owner=request.user, room=None)
-    )
-    
-    if booking.status == 'pending':
-        booking.status = 'cancelled'
-        booking.save()
-        messages.success(request, f'Booking #{booking.id} rejected.')
-    else:
-        messages.info(request, 'This booking is already processed.')
-    return redirect('owner_bookings')
