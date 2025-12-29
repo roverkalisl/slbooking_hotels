@@ -3,9 +3,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
+from django.utils import timezone
+from datetime import timedelta
+from django.contrib.auth.models import User
 from .models import Hotel, Room, Booking
 from .forms import RegistrationForm, HotelForm, RoomForm, BookingForm, ManualBookingForm
-
 
 def home(request):
     hotels = Hotel.objects.all()[:6]  # Featured hotels
@@ -33,10 +35,12 @@ def hotel_detail(request, hotel_id):
     hotel = get_object_or_404(Hotel, id=hotel_id)
     rooms = hotel.rooms.all() if hotel.rented_type == 'rooms' else None
     is_full_villa = hotel.rented_type == 'full'
+    bookings = hotel.bookings.all()  # For calendar
     return render(request, 'core/hotel_detail.html', {
         'hotel': hotel,
         'rooms': rooms,
-        'is_full_villa': is_full_villa
+        'is_full_villa': is_full_villa,
+        'bookings': bookings
     })
 
 @login_required
@@ -125,7 +129,6 @@ def owner_bookings(request):
         messages.error(request, 'Access denied.')
         return redirect('home')
     
-    # All bookings for owner's hotels (rooms + entire villa)
     bookings = Booking.objects.filter(
         Q(room__hotel__owner=request.user) | Q(hotel__owner=request.user, room=None)
     ).order_by('-id')
@@ -136,7 +139,7 @@ def owner_bookings(request):
 def confirm_booking(request, booking_id):
     booking = get_object_or_404(
         Booking,
-        Q(id=booking_id),
+        id=booking_id,
         Q(room__hotel__owner=request.user) | Q(hotel__owner=request.user, room=None)
     )
     
@@ -152,7 +155,7 @@ def confirm_booking(request, booking_id):
 def reject_booking(request, booking_id):
     booking = get_object_or_404(
         Booking,
-        Q(id=booking_id),
+        id=booking_id,
         Q(room__hotel__owner=request.user) | Q(hotel__owner=request.user, room=None)
     )
     
@@ -174,7 +177,7 @@ def add_hotel(request):
             hotel = form.save(commit=False)
             hotel.owner = request.user
             hotel.save()
-            form.save_m2m()  # for facilities
+            form.save_m2m()
             messages.success(request, 'Hotel added successfully!')
             return redirect('owner_dashboard')
     else:
@@ -208,6 +211,7 @@ def add_room(request, hotel_id):
     else:
         form = RoomForm()
     return render(request, 'core/add_room.html', {'form': form, 'hotel': hotel})
+
 @login_required
 def add_manual_booking(request, hotel_id):
     hotel = get_object_or_404(Hotel, id=hotel_id, owner=request.user)
@@ -216,7 +220,6 @@ def add_manual_booking(request, hotel_id):
         if form.is_valid():
             check_in = form.cleaned_data['check_in']
             check_out = form.cleaned_data['check_out']
-            # Availability check (optional - external එක නම් skip කරන්න පුළුවන්)
             overlapping = Booking.objects.filter(
                 hotel=hotel,
                 check_in__lt=check_out,
@@ -227,12 +230,40 @@ def add_manual_booking(request, hotel_id):
             else:
                 booking = form.save(commit=False)
                 booking.hotel = hotel
-                booking.room = None  # Entire hotel block
-                booking.status = 'confirmed'  # Auto confirmed
-                booking.customer = None  # External customer
+                booking.room = None
+                booking.status = 'confirmed'
+                booking.customer = None  # External booking
                 booking.save()
-                messages.success(request, f'Manual booking added from {booking.source}! Dates blocked.')
+                messages.success(request, f'Manual booking added from {booking.source}!')
                 return redirect('owner_dashboard')
     else:
         form = ManualBookingForm()
     return render(request, 'core/add_manual_booking.html', {'form': form, 'hotel': hotel})
+
+@login_required
+def analytics_dashboard(request):
+    if request.user.profile.role != 'owner' and not request.user.is_superuser:
+        messages.error(request, 'Access denied.')
+        return redirect('home')
+    
+    total_users = User.objects.count()
+    total_customers = User.objects.filter(profile__role='customer').count()
+    total_owners = User.objects.filter(profile__role='owner').count()
+    
+    week_ago = timezone.now() - timedelta(days=7)
+    active_last_week = User.objects.filter(last_login__gte=week_ago).count()
+    
+    today = timezone.now().date()
+    today_logins = User.objects.filter(last_login__date=today).count()
+    
+    recent_logins = User.objects.filter(last_login__isnull=False).order_by('-last_login')[:10]
+    
+    context = {
+        'total_users': total_users,
+        'total_customers': total_customers,
+        'total_owners': total_owners,
+        'active_last_week': active_last_week,
+        'today_logins': today_logins,
+        'recent_logins': recent_logins,
+    }
+    return render(request, 'core/analytics_dashboard.html', context)
