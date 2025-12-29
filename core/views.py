@@ -139,7 +139,7 @@ def owner_bookings(request):
 def confirm_booking(request, booking_id):
     booking = get_object_or_404(
         Booking,
-        id=booking_id,
+        Q(id=booking_id),
         Q(room__hotel__owner=request.user) | Q(hotel__owner=request.user, room=None)
     )
     
@@ -155,7 +155,7 @@ def confirm_booking(request, booking_id):
 def reject_booking(request, booking_id):
     booking = get_object_or_404(
         Booking,
-        id=booking_id,
+        Q(id=booking_id),
         Q(room__hotel__owner=request.user) | Q(hotel__owner=request.user, room=None)
     )
     
@@ -232,7 +232,7 @@ def add_manual_booking(request, hotel_id):
                 booking.hotel = hotel
                 booking.room = None
                 booking.status = 'confirmed'
-                booking.customer = None  # External booking
+                booking.customer = None
                 booking.save()
                 messages.success(request, f'Manual booking added from {booking.source}!')
                 return redirect('owner_dashboard')
