@@ -5,6 +5,8 @@ from django.contrib import messages
 from django.db.models import Q
 from .models import Hotel, Room, Booking
 from .forms import RegistrationForm, HotelForm, RoomForm, BookingForm
+from .forms import RegistrationForm, HotelForm, RoomForm, BookingForm, ManualBookingForm
+
 
 def home(request):
     hotels = Hotel.objects.all()[:6]  # Featured hotels

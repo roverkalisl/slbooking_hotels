@@ -35,13 +35,18 @@ class BookingForm(forms.ModelForm):
             'check_out': forms.DateInput(attrs={'type': 'date'}),
         }
 class ManualBookingForm(forms.ModelForm):
-    source = forms.CharField(max_length=50, required=True, initial="Booking.com")
-    
+    source = forms.CharField(
+        max_length=50,
+        required=True,
+        label="Source",
+        help_text="e.g., Booking.com, Agoda, Walk-in",
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Booking.com'})
+    )
+
     class Meta:
         model = Booking
         fields = ['check_in', 'check_out', 'source']
         widgets = {
             'check_in': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'check_out': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'source': forms.TextInput(attrs={'class': 'form-control'}),
         }
