@@ -8,3 +8,4 @@ cloudinary>=1.38.0
 django-cloudinary-storage>=0.3.0
 django-multiselectfield
 twilio
+django-multiselectfield==1.0.1

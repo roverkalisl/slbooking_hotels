@@ -31,6 +31,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'cloudinary',
     'core.apps.CoreConfig',
+    'multiselectfield',
+    'core.apps.CoreConfig',
 ]
 
 MIDDLEWARE = [
