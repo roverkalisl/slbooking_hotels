@@ -207,3 +207,31 @@ def add_room(request, hotel_id):
     else:
         form = RoomForm()
     return render(request, 'core/add_room.html', {'form': form, 'hotel': hotel})
+@login_required
+def add_manual_booking(request, hotel_id):
+    hotel = get_object_or_404(Hotel, id=hotel_id, owner=request.user)
+    if request.method == 'POST':
+        form = ManualBookingForm(request.POST)
+        if form.is_valid():
+            check_in = form.cleaned_data['check_in']
+            check_out = form.cleaned_data['check_out']
+            # Availability check (optional - external එක නම් skip කරන්න පුළුවන්)
+            overlapping = Booking.objects.filter(
+                hotel=hotel,
+                check_in__lt=check_out,
+                check_out__gt=check_in
+            ).exists()
+            if overlapping:
+                messages.error(request, 'Selected dates are already booked.')
+            else:
+                booking = form.save(commit=False)
+                booking.hotel = hotel
+                booking.room = None  # Entire hotel block
+                booking.status = 'confirmed'  # Auto confirmed
+                booking.customer = None  # External customer
+                booking.save()
+                messages.success(request, f'Manual booking added from {booking.source}! Dates blocked.')
+                return redirect('owner_dashboard')
+    else:
+        form = ManualBookingForm()
+    return render(request, 'core/add_manual_booking.html', {'form': form, 'hotel': hotel})
