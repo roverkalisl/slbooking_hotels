@@ -66,7 +66,7 @@ class Booking(models.Model):
         ('cancelled', 'Cancelled'),
     )
     customer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='bookings')
-    room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, blank=True)
+    room = models.ForeignKey(Room, on_delete=models.SET_NULL, null=True, blank=True)
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, null=True, blank=True)  # for full villa
     check_in = models.DateField()
     check_out = models.DateField()
