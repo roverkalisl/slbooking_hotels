@@ -66,6 +66,20 @@ class Room(models.Model):
     def __str__(self):
         return f"{self.room_number} - {self.hotel.name}"
 
+    def is_available(self):
+        from datetime import date
+        today = date.today()
+        overlapping = Booking.objects.filter(
+            room=self,
+            check_in__lte=today,
+            check_out__gt=today,
+            status__in=['pending', 'confirmed']
+        ).exists()
+        return not overlapping
+
+    is_available.boolean = True
+    is_available.short_description = 'Available Today'
+
 class Booking(models.Model):
     STATUS_CHOICES = (
         ('pending', 'Pending'),
@@ -73,7 +87,7 @@ class Booking(models.Model):
         ('cancelled', 'Cancelled'),
     )
     customer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='bookings')
-    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='bookings')
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='bookings', null=True, blank=True)
     room = models.ForeignKey(Room, on_delete=models.SET_NULL, null=True, blank=True)
     check_in = models.DateField()
     check_out = models.DateField()

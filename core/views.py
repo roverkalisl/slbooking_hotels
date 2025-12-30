@@ -1,23 +1,269 @@
-# core/urls.py
-from django.urls import path
-from . import views
+# core/views.py
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.db.models import Q
+from django.utils import timezone
+from datetime import timedelta
+from django.contrib.auth.models import User
+from .models import Hotel, Room, Booking
+from .forms import RegistrationForm, HotelForm, RoomForm, BookingForm, ManualBookingForm
 
-urlpatterns = [
-    path('', views.home, name='home'),
-    path('register/', views.register, name='register'),
-    path('search/', views.search_hotels, name='search_hotels'),
-    path('hotel/<int:hotel_id>/', views.hotel_detail, name='hotel_detail'),
-    path('book/<int:room_id>/', views.book_room, name='book_room'),
-    path('book-villa/<int:hotel_id>/', views.book_villa, name='book_villa'),
-    path('my-bookings/', views.my_bookings, name='my_bookings'),
-    path('booking/<int:booking_id>/cancel/', views.cancel_booking, name='cancel_booking'),
-    path('owner/dashboard/', views.owner_dashboard, name='owner_dashboard'),
-    path('owner/add-hotel/', views.add_hotel, name='add_hotel'),
-    path('owner/edit-hotel/<int:hotel_id>/', views.edit_hotel, name='edit_hotel'),
-    path('owner/hotel/<int:hotel_id>/add-room/', views.add_room, name='add_room'),
-    path('owner/bookings/', views.owner_bookings, name='owner_bookings'),
-    path('owner/confirm-booking/<int:booking_id>/', views.confirm_booking, name='confirm_booking'),
-    path('owner/reject-booking/<int:booking_id>/', views.reject_booking, name='reject_booking'),
-    path('owner/hotel/<int:hotel_id>/add-manual-booking/', views.add_manual_booking, name='add_manual_booking'),
-    path('analytics/', views.analytics_dashboard, name='analytics_dashboard'),
-]
+def home(request):
+    hotels = Hotel.objects.all()[:6]  # Featured hotels
+    return render(request, 'core/home.html', {'hotels': hotels})
+
+def register(request):
+    if request.method == 'POST':
+        form = RegistrationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Registration successful! You can now log in.')
+            return redirect('login')
+    else:
+        form = RegistrationForm()
+    return render(request, 'core/register.html', {'form': form})
+
+def search_hotels(request):
+    query = request.GET.get('q', '')
+    hotels = Hotel.objects.all()
+    if query:
+        hotels = hotels.filter(Q(name__icontains=query) | Q(address__icontains=query))
+    return render(request, 'core/search.html', {'hotels': hotels, 'query': query})
+
+def hotel_detail(request, hotel_id):
+    hotel = get_object_or_404(Hotel, id=hotel_id)
+    rooms = hotel.rooms.all() if hotel.rented_type == 'rooms' else None
+    is_full_villa = hotel.rented_type == 'full'
+    bookings = hotel.bookings.all()  # For calendar
+    return render(request, 'core/hotel_detail.html', {
+        'hotel': hotel,
+        'rooms': rooms,
+        'is_full_villa': is_full_villa,
+        'bookings': bookings
+    })
+
+@login_required
+def book_room(request, room_id):
+    room = get_object_or_404(Room, id=room_id)
+    if request.method == 'POST':
+        form = BookingForm(request.POST)
+        if form.is_valid():
+            check_in = form.cleaned_data['check_in']
+            check_out = form.cleaned_data['check_out']
+            overlapping = Booking.objects.filter(
+                room=room,
+                check_in__lt=check_out,
+                check_out__gt=check_in,
+                status__in=['pending', 'confirmed']
+            ).exists()
+            if overlapping:
+                messages.error(request, 'This room is not available for the selected dates.')
+            else:
+                booking = form.save(commit=False)
+                booking.customer = request.user
+                booking.room = room
+                booking.hotel = room.hotel
+                booking.save()
+                messages.success(request, 'Booking requested successfully!')
+                return redirect('my_bookings')
+    else:
+        form = BookingForm()
+    return render(request, 'core/book_room.html', {'form': form, 'room': room})
+
+@login_required
+def book_villa(request, hotel_id):
+    hotel = get_object_or_404(Hotel, id=hotel_id, rented_type='full')
+    if request.method == 'POST':
+        form = BookingForm(request.POST)
+        if form.is_valid():
+            check_in = form.cleaned_data['check_in']
+            check_out = form.cleaned_data['check_out']
+            overlapping = Booking.objects.filter(
+                hotel=hotel,
+                check_in__lt=check_out,
+                check_out__gt=check_in,
+                status__in=['pending', 'confirmed']
+            ).exists()
+            if overlapping:
+                messages.error(request, 'This villa is not available for the selected dates.')
+            else:
+                booking = form.save(commit=False)
+                booking.customer = request.user
+                booking.hotel = hotel
+                booking.room = None
+                booking.save()
+                messages.success(request, 'Full Villa booking requested successfully!')
+                return redirect('my_bookings')
+    else:
+        form = BookingForm()
+    return render(request, 'core/book_villa.html', {'form': form, 'hotel': hotel})
+
+@login_required
+def my_bookings(request):
+    bookings = Booking.objects.filter(customer=request.user).order_by('-id')
+    return render(request, 'core/my_bookings.html', {'bookings': bookings})
+
+@login_required
+def cancel_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id, customer=request.user)
+    if booking.status == 'pending':
+        booking.status = 'cancelled'
+        booking.save()
+        messages.success(request, 'Your booking has been cancelled.')
+    else:
+        messages.info(request, 'This booking cannot be cancelled.')
+    return redirect('my_bookings')
+
+@login_required
+def owner_dashboard(request):
+    if request.user.profile.role != 'owner':
+        messages.error(request, 'Access denied. Owners only.')
+        return redirect('home')
+    hotels = Hotel.objects.filter(owner=request.user)
+    return render(request, 'core/owner_dashboard.html', {'hotels': hotels})
+
+@login_required
+def owner_bookings(request):
+    if request.user.profile.role != 'owner':
+        messages.error(request, 'Access denied.')
+        return redirect('home')
+    
+    bookings = Booking.objects.filter(
+        Q(room__hotel__owner=request.user) | Q(hotel__owner=request.user, room=None)
+    ).order_by('-id')
+    
+    return render(request, 'core/owner_bookings.html', {'bookings': bookings})
+
+@login_required
+def confirm_booking(request, booking_id):
+    booking = get_object_or_404(
+        Booking,
+        Q(id=booking_id),
+        Q(room__hotel__owner=request.user) | Q(hotel__owner=request.user, room=None)
+    )
+    
+    if booking.status == 'pending':
+        booking.status = 'confirmed'
+        booking.save()
+        messages.success(request, f'Booking #{booking.id} confirmed successfully!')
+    else:
+        messages.info(request, 'This booking is already processed.')
+    return redirect('owner_bookings')
+
+@login_required
+def reject_booking(request, booking_id):
+    booking = get_object_or_404(
+        Booking,
+        Q(id=booking_id),
+        Q(room__hotel__owner=request.user) | Q(hotel__owner=request.user, room=None)
+    )
+    
+    if booking.status == 'pending':
+        booking.status = 'cancelled'
+        booking.save()
+        messages.success(request, f'Booking #{booking.id} rejected.')
+    else:
+        messages.info(request, 'This booking is already processed.')
+    return redirect('owner_bookings')
+
+@login_required
+def add_hotel(request):
+    if request.user.profile.role != 'owner':
+        return redirect('home')
+    if request.method == 'POST':
+        form = HotelForm(request.POST, request.FILES)
+        if form.is_valid():
+            hotel = form.save(commit=False)
+            hotel.owner = request.user
+            hotel.save()
+            form.save_m2m()
+            messages.success(request, 'Hotel added successfully!')
+            return redirect('owner_dashboard')
+    else:
+        form = HotelForm()
+    return render(request, 'core/add_hotel.html', {'form': form})
+
+@login_required
+def edit_hotel(request, hotel_id):
+    hotel = get_object_or_404(Hotel, id=hotel_id, owner=request.user)
+    if request.method == 'POST':
+        form = HotelForm(request.POST, request.FILES, instance=hotel)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Hotel updated successfully!')
+            return redirect('owner_dashboard')
+    else:
+        form = HotelForm(instance=hotel)
+    return render(request, 'core/edit_hotel.html', {'form': form, 'hotel': hotel})
+
+@login_required
+def add_room(request, hotel_id):
+    hotel = get_object_or_404(Hotel, id=hotel_id, owner=request.user)
+    if request.method == 'POST':
+        form = RoomForm(request.POST, request.FILES)
+        if form.is_valid():
+            room = form.save(commit=False)
+            room.hotel = hotel
+            room.save()
+            messages.success(request, 'Room added successfully!')
+            return redirect('owner_dashboard')
+    else:
+        form = RoomForm()
+    return render(request, 'core/add_room.html', {'form': form, 'hotel': hotel})
+
+@login_required
+def add_manual_booking(request, hotel_id):
+    hotel = get_object_or_404(Hotel, id=hotel_id, owner=request.user)
+    if request.method == 'POST':
+        form = ManualBookingForm(request.POST)
+        if form.is_valid():
+            check_in = form.cleaned_data['check_in']
+            check_out = form.cleaned_data['check_out']
+            overlapping = Booking.objects.filter(
+                hotel=hotel,
+                check_in__lt=check_out,
+                check_out__gt=check_in
+            ).exists()
+            if overlapping:
+                messages.error(request, 'Selected dates are already booked.')
+            else:
+                booking = form.save(commit=False)
+                booking.hotel = hotel
+                booking.room = None
+                booking.status = 'confirmed'
+                booking.customer = None
+                booking.save()
+                messages.success(request, f'Manual booking added from {booking.source}!')
+                return redirect('owner_dashboard')
+    else:
+        form = ManualBookingForm()
+    return render(request, 'core/add_manual_booking.html', {'form': form, 'hotel': hotel})
+
+@login_required
+def analytics_dashboard(request):
+    if request.user.profile.role != 'owner' and not request.user.is_superuser:
+        messages.error(request, 'Access denied.')
+        return redirect('home')
+    
+    total_users = User.objects.count()
+    total_customers = User.objects.filter(profile__role='customer').count()
+    total_owners = User.objects.filter(profile__role='owner').count()
+    
+    week_ago = timezone.now() - timedelta(days=7)
+    active_last_week = User.objects.filter(last_login__gte=week_ago).count()
+    
+    today = timezone.now().date()
+    today_logins = User.objects.filter(last_login__date=today).count()
+    
+    recent_logins = User.objects.filter(last_login__isnull=False).order_by('-last_login')[:10]
+    
+    context = {
+        'total_users': total_users,
+        'total_customers': total_customers,
+        'total_owners': total_owners,
+        'active_last_week': active_last_week,
+        'today_logins': today_logins,
+        'recent_logins': recent_logins,
+    }
+    return render(request, 'core/analytics_dashboard.html', context)
