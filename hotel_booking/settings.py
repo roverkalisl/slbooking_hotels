@@ -4,18 +4,18 @@ Django settings for hotel_booking project.
 
 from pathlib import Path
 import os
-from decouple import config  # ← python-decouple import
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-in-production')
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-in-production-please')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = ['*']  # Render එකේ * allow කරනවා
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -27,12 +27,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Third party apps
+    # Third party
     'cloudinary_storage',
     'cloudinary',
-    'multiselectfield',  # Facilities සඳහා
+    'multiselectfield',
 
-    # Local apps
+    # Local
     'core.apps.CoreConfig',
 ]
 
@@ -67,17 +67,21 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'hotel_booking.wsgi.application'
 
-# Database
+# Database - Local එකට SQLite, Render එකට PostgreSQL (env variables override කරනවා)
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='slbookingdb'),
-        'USER': config('DB_USER', default='slbookingdb_user'),
-        'PASSWORD': config('DB_PASSWORD', default=''),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# Render එකේ PostgreSQL use කරනවා නම් env variables දාන්න (Render dashboard → Environment)
+# DB_ENGINE = django.db.backends.postgresql
+# DB_NAME = ...
+# DB_USER = ...
+# DB_PASSWORD = ...
+# DB_HOST = ...
+# DB_PORT = 5432
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -110,18 +114,18 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': config('CLOUDINARY_API_SECRET', default=''),
 }
 
-# Twilio SMS config (optional)
+# Twilio config (optional)
 TWILIO_SID = config('TWILIO_SID', default='')
 TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN', default='')
 TWILIO_PHONE_NUMBER = config('TWILIO_PHONE_NUMBER', default='')
 OWNER_PHONE = config('OWNER_PHONE', default='')
 
-# Login/Logout redirect
+# Login redirect
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = '/login/'
 
-# Email backend (development එකේ console එකට)
+# Email backend (development එකේ console)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Default primary key field type
