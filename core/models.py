@@ -86,15 +86,8 @@ class Booking(models.Model):
         ('confirmed', 'Confirmed'),
         ('cancelled', 'Cancelled'),
     )
-<<<<<<< HEAD
     customer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='bookings')
-    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='bookings', null=True, blank=True)
-=======
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='bookings')
->>>>>>> 50b968a152be4ed0cb50ba6295bd1f165d222887
-    room = models.ForeignKey(Room, on_delete=models.SET_NULL, null=True, blank=True)
-    customer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='bookings')
-    # ... other fields ...
     room = models.ForeignKey(Room, on_delete=models.SET_NULL, null=True, blank=True)
     check_in = models.DateField()
     check_out = models.DateField()
