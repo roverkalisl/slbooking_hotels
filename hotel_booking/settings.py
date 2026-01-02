@@ -5,6 +5,7 @@ Django settings for hotel_booking project.
 from pathlib import Path
 import os
 from decouple import config
+import dj_database_url  # Render PostgreSQL auto detect සඳහා
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -13,12 +14,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-in-production-please')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=True, cast=bool)
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = ['*']
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -67,7 +67,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'hotel_booking.wsgi.application'
 
-# Database - Local එකට SQLite, Render එකට PostgreSQL (env variables override කරනවා)
+# Database - Local SQLite, Render PostgreSQL auto detect
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -75,13 +75,9 @@ DATABASES = {
     }
 }
 
-# Render එකේ PostgreSQL use කරනවා නම් env variables දාන්න (Render dashboard → Environment)
-# DB_ENGINE = django.db.backends.postgresql
-# DB_NAME = ...
-# DB_USER = ...
-# DB_PASSWORD = ...
-# DB_HOST = ...
-# DB_PORT = 5432
+# Render එකේ DATABASE_URL එක තියෙනවා නම් PostgreSQL use කරනවා
+if os.environ.get('DATABASE_URL'):
+    DATABASES['default'] = dj_database_url.parse(os.environ.get('DATABASE_URL'))
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
