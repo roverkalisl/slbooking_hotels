@@ -135,22 +135,27 @@ def owner_bookings(request):
     
     return render(request, 'core/owner_bookings.html', {'bookings': bookings})
 
-@login_required
-def confirm_booking(request, booking_id):
-    booking = get_object_or_404(
-        Booking,
-        Q(id=booking_id),
-        Q(room__hotel__owner=request.user) | Q(hotel__owner=request.user, room=None)
-    )
-    
-    if booking.status == 'pending':
-        booking.status = 'confirmed'
-        booking.save()
-        messages.success(request, f'Booking #{booking.id} confirmed successfully!')
-    else:
-        messages.info(request, 'This booking is already processed.')
-    return redirect('owner_bookings')
+from twilio.rest import Client
 
+def confirm_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+    if request.user != booking.hotel.owner:
+        messages.error(request, 'Access denied.')
+        return redirect('owner_bookings')
+    
+    booking.status = 'confirmed'
+    booking.save()
+
+    # WhatsApp notification to customer
+    client = Client(settings.TWILIO_SID, settings.TWILIO_AUTH_TOKEN)
+    message = client.messages.create(
+        body=f"Your booking at {booking.hotel.name} from {booking.check_in} to {booking.check_out} is CONFIRMED!",
+        from_='whatsapp:' + settings.TWILIO_PHONE_NUMBER,
+        to='whatsapp:' + booking.user.profile.phone_number  # phone number profile එකේ තියෙනවා බලන්න
+    )
+
+    messages.success(request, 'Booking confirmed and notification sent!')
+    return redirect('owner_bookings')
 @login_required
 def reject_booking(request, booking_id):
     booking = get_object_or_404(
@@ -170,18 +175,22 @@ def reject_booking(request, booking_id):
 @login_required
 def add_hotel(request):
     if request.user.profile.role != 'owner':
+        messages.error(request, 'Only owners can add hotels.')
         return redirect('home')
+    # rest of the code...
+    
     if request.method == 'POST':
         form = HotelForm(request.POST, request.FILES)
         if form.is_valid():
             hotel = form.save(commit=False)
             hotel.owner = request.user
-            hotel.save()
-            form.save_m2m()
+            hotel.save()  # එක වතාවක් විතරයි save කරන්න
+            form.save_m2m()  # facilities save කරන්න
             messages.success(request, 'Hotel added successfully!')
             return redirect('owner_dashboard')
     else:
         form = HotelForm()
+    
     return render(request, 'core/add_hotel.html', {'form': form})
 
 @login_required
