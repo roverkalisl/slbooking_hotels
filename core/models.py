@@ -47,7 +47,7 @@ class Hotel(models.Model):
     ], blank=True)
     rented_type = models.CharField(max_length=20, choices=RENTED_TYPE_CHOICES, default='rooms')
     price_per_night = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    google_location_link = models.URLField(blank=True, null=True)
+    google_location_link = models.URLField(blank=True, null=True, verbose_name="Google Maps Link")    
     facebook_page = models.URLField(blank=True, null=True, verbose_name="Facebook Page Link")  # මේක add කරන්න
 
     def __str__(self):
