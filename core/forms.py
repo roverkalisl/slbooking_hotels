@@ -1,22 +1,34 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Hotel, Room, Booking, Profile
+from .models import Hotel, Room, Booking
+
+# ROLE_CHOICES මෙතන hardcode කරලා තියෙනවා (models.py එකට ඉස්සරහට import වෙන problem නැහැ)
+ROLE_CHOICES = (
+    ('customer', 'Customer'),
+    ('owner', 'Owner'),
+)
 
 class RegistrationForm(UserCreationForm):
-    role = forms.ChoiceField(choices=Profile.ROLE_CHOICES, label="I am a")
+    email = forms.EmailField(required=True, label="Email")
+    phone_number = forms.CharField(max_length=20, required=False, label="Phone Number (for WhatsApp)")
+    role = forms.ChoiceField(choices=ROLE_CHOICES, label="I am a")
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'password1', 'password2', 'role')
+        fields = ('username', 'email', 'phone_number', 'password1', 'password2', 'role')
 
     def save(self, commit=True):
         user = super().save(commit=False)
+        user.email = self.cleaned_data['email']
         if commit:
             user.save()
-            Profile.objects.create(
+            Profile.objects.update_or_create(
                 user=user,
-                role=self.cleaned_data['role']
+                defaults={
+                    'role': self.cleaned_data['role'],
+                    'phone_number': self.cleaned_data['phone_number']
+                }
             )
         return user
 
