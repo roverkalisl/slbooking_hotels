@@ -1,84 +1,68 @@
-# core/models.py
 from django.db import models
 from django.contrib.auth.models import User
 from multiselectfield import MultiSelectField
 
-FACILITY_CHOICES = (
-    ('wifi', 'WiFi'),
-    ('parking', 'Parking'),
-    ('pool', 'Swimming Pool'),
-    ('gym', 'Gym'),
-    ('spa', 'Spa'),
-    ('restaurant', 'Restaurant'),
-    ('bar', 'Bar'),
-    ('ac', 'Air Conditioning'),
-    ('tv', 'TV'),
-    ('hotwater', 'Hot Water'),
+# Role choices
+ROLE_CHOICES = (
+    ('customer', 'Customer'),
+    ('owner', 'Owner'),
+)
+
+# Rented type choices
+RENTED_TYPE_CHOICES = (
+    ('rooms', 'Individual Rooms'),
+    ('full', 'Entire Villa'),
+)
+
+# AC type choices
+AC_TYPE_CHOICES = (
+    ('ac', 'AC'),
+    ('non_ac', 'Non-AC'),
 )
 
 class Profile(models.Model):
-    ROLE_CHOICES = (
-        ('customer', 'Customer'),
-        ('owner', 'Owner'),
-    )
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='customer')
-    phone = models.CharField(max_length=15, blank=True, null=True)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='customer')
+    phone_number = models.CharField(max_length=20, blank=True, null=True)  # WhatsApp number +94xxxxxxxxx
 
     def __str__(self):
-        return f"{self.user.username} - {self.role}"
+        return self.user.username
 
 class Hotel(models.Model):
-    RENTED_TYPE_CHOICES = (
-        ('rooms', 'Individual Rooms'),
-        ('full', 'Entire Villa'),
-    )
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='hotels')
     name = models.CharField(max_length=200)
-    address = models.TextField()
-    description = models.TextField(blank=True)
-    google_location_link = models.URLField(blank=True)
-    social_media_link = models.URLField(blank=True)
-    rented_type = models.CharField(max_length=10, choices=RENTED_TYPE_CHOICES)
-    facilities = MultiSelectField(choices=FACILITY_CHOICES, blank=True)
-    main_image = models.ImageField(upload_to='hotels/', blank=True, null=True)
+    address = models.CharField(max_length=300)
+    description = models.TextField()
+    main_image = models.ImageField(upload_to='hotels/')
     photo1 = models.ImageField(upload_to='hotels/', blank=True, null=True)
     photo2 = models.ImageField(upload_to='hotels/', blank=True, null=True)
     photo3 = models.ImageField(upload_to='hotels/', blank=True, null=True)
     photo4 = models.ImageField(upload_to='hotels/', blank=True, null=True)
-    price_per_night = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    facilities = MultiSelectField(choices=[
+        ('wifi', 'Free WiFi'),
+        ('pool', 'Swimming Pool'),
+        ('parking', 'Parking'),
+        ('restaurant', 'Restaurant'),
+        ('ac', 'Air Conditioning'),
+        ('gym', 'Gym'),
+        ('spa', 'Spa'),
+    ], blank=True)
+    rented_type = models.CharField(max_length=20, choices=RENTED_TYPE_CHOICES, default='rooms')
+    price_per_night = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)  # for full villa
 
     def __str__(self):
         return self.name
 
 class Room(models.Model):
-    AC_TYPE_CHOICES = (
-        ('ac', 'Air Conditioned'),
-        ('non_ac', 'Non-AC'),
-    )
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='rooms')
-    room_number = models.CharField(max_length=20)
+    room_number = models.CharField(max_length=10)
     room_type = models.CharField(max_length=100)
-    ac_type = models.CharField(max_length=10, choices=AC_TYPE_CHOICES)
+    ac_type = models.CharField(max_length=20, choices=AC_TYPE_CHOICES)
     price_per_night = models.DecimalField(max_digits=10, decimal_places=2)
     image = models.ImageField(upload_to='rooms/', blank=True, null=True)
 
     def __str__(self):
-        return f"{self.room_number} - {self.hotel.name}"
-
-    def is_available(self):
-        from datetime import date
-        today = date.today()
-        overlapping = Booking.objects.filter(
-            room=self,
-            check_in__lte=today,
-            check_out__gt=today,
-            status__in=['pending', 'confirmed']
-        ).exists()
-        return not overlapping
-
-    is_available.boolean = True
-    is_available.short_description = 'Available Today'
+        return f"{self.room_number} - {self.room_type}"
 
 class Booking(models.Model):
     STATUS_CHOICES = (
@@ -86,14 +70,13 @@ class Booking(models.Model):
         ('confirmed', 'Confirmed'),
         ('cancelled', 'Cancelled'),
     )
-    customer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='bookings')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookings')
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='bookings')
-    room = models.ForeignKey(Room, on_delete=models.SET_NULL, null=True, blank=True)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, blank=True)
     check_in = models.DateField()
     check_out = models.DateField()
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
-    total_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    source = models.CharField(max_length=50, blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     def __str__(self):
-        return f"Booking {self.id} - {self.hotel.name}"
+        return f"{self.user.username} - {self.hotel.name} ({self.status})"

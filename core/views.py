@@ -1,41 +1,46 @@
-# core/views.py
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.contrib.auth import login
 from django.db.models import Q
-from django.utils import timezone
-from datetime import timedelta
-from django.contrib.auth.models import User
-from .models import Hotel, Room, Booking
-from .forms import RegistrationForm, HotelForm, RoomForm, BookingForm, ManualBookingForm
+from .models import Hotel, Room, Booking, Profile
+from .forms import HotelForm, RoomForm, BookingForm, ManualBookingForm
+from django.contrib.auth.forms import UserCreationForm
+from twilio.rest import Client
+from django.conf import settings
 
+# Home page
 def home(request):
-    hotels = Hotel.objects.all()[:6]  # Featured hotels
+    hotels = Hotel.objects.all()[:6]  # featured hotels
     return render(request, 'core/home.html', {'hotels': hotels})
 
+# Register
 def register(request):
     if request.method == 'POST':
-        form = RegistrationForm(request.POST)
+        form = UserCreationForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Registration successful! You can now log in.')
-            return redirect('login')
+            user = form.save()
+            Profile.objects.create(user=user, role='customer')  # default customer
+            login(request, user)
+            messages.success(request, 'Registration successful!')
+            return redirect('home')
     else:
-        form = RegistrationForm()
+        form = UserCreationForm()
     return render(request, 'core/register.html', {'form': form})
 
+# Search hotels
 def search_hotels(request):
     query = request.GET.get('q', '')
-    hotels = Hotel.objects.all()
-    if query:
-        hotels = hotels.filter(Q(name__icontains=query) | Q(address__icontains=query))
+    hotels = Hotel.objects.filter(name__icontains=query) or Hotel.objects.filter(address__icontains=query)
     return render(request, 'core/search.html', {'hotels': hotels, 'query': query})
 
+# Hotel detail + calendar
 def hotel_detail(request, hotel_id):
     hotel = get_object_or_404(Hotel, id=hotel_id)
     rooms = hotel.rooms.all() if hotel.rented_type == 'rooms' else None
     is_full_villa = hotel.rented_type == 'full'
-    bookings = hotel.bookings.all()  # For calendar
+    bookings = hotel.bookings.filter(status='confirmed').all()  # calendar එකට confirmed විතරයි
+    
     return render(request, 'core/hotel_detail.html', {
         'hotel': hotel,
         'rooms': rooms,
@@ -43,86 +48,118 @@ def hotel_detail(request, hotel_id):
         'bookings': bookings
     })
 
+# Book room
 @login_required
 def book_room(request, room_id):
     room = get_object_or_404(Room, id=room_id)
     if request.method == 'POST':
         form = BookingForm(request.POST)
         if form.is_valid():
-            check_in = form.cleaned_data['check_in']
-            check_out = form.cleaned_data['check_out']
-            overlapping = Booking.objects.filter(
-                room=room,
-                check_in__lt=check_out,
-                check_out__gt=check_in,
-                status__in=['pending', 'confirmed']
-            ).exists()
-            if overlapping:
-                messages.error(request, 'This room is not available for the selected dates.')
-            else:
-                booking = form.save(commit=False)
-                booking.customer = request.user
-                booking.room = room
-                booking.hotel = room.hotel
-                booking.save()
-                messages.success(request, 'Booking requested successfully!')
-                return redirect('my_bookings')
+            booking = form.save(commit=False)
+            booking.user = request.user
+            booking.hotel = room.hotel
+            booking.room = room
+            booking.save()
+            messages.success(request, 'Booking request sent! Waiting for confirmation.')
+            return redirect('my_bookings')
     else:
         form = BookingForm()
     return render(request, 'core/book_room.html', {'form': form, 'room': room})
 
+# Book entire villa
 @login_required
 def book_villa(request, hotel_id):
-    hotel = get_object_or_404(Hotel, id=hotel_id, rented_type='full')
+    hotel = get_object_or_404(Hotel, id=hotel_id)
     if request.method == 'POST':
         form = BookingForm(request.POST)
         if form.is_valid():
-            check_in = form.cleaned_data['check_in']
-            check_out = form.cleaned_data['check_out']
-            overlapping = Booking.objects.filter(
-                hotel=hotel,
-                check_in__lt=check_out,
-                check_out__gt=check_in,
-                status__in=['pending', 'confirmed']
-            ).exists()
-            if overlapping:
-                messages.error(request, 'This villa is not available for the selected dates.')
-            else:
-                booking = form.save(commit=False)
-                booking.customer = request.user
-                booking.hotel = hotel
-                booking.room = None
-                booking.save()
-                messages.success(request, 'Full Villa booking requested successfully!')
-                return redirect('my_bookings')
+            booking = form.save(commit=False)
+            booking.user = request.user
+            booking.hotel = hotel
+            booking.save()
+            messages.success(request, 'Booking request sent! Waiting for confirmation.')
+            return redirect('my_bookings')
     else:
         form = BookingForm()
     return render(request, 'core/book_villa.html', {'form': form, 'hotel': hotel})
 
+# My bookings
 @login_required
 def my_bookings(request):
-    bookings = Booking.objects.filter(customer=request.user).order_by('-id')
+    bookings = Booking.objects.filter(user=request.user).order_by('-id')
     return render(request, 'core/my_bookings.html', {'bookings': bookings})
 
+# Cancel booking
 @login_required
 def cancel_booking(request, booking_id):
-    booking = get_object_or_404(Booking, id=booking_id, customer=request.user)
+    booking = get_object_or_404(Booking, id=booking_id, user=request.user)
     if booking.status == 'pending':
         booking.status = 'cancelled'
         booking.save()
-        messages.success(request, 'Your booking has been cancelled.')
-    else:
-        messages.info(request, 'This booking cannot be cancelled.')
+        messages.success(request, 'Booking cancelled.')
     return redirect('my_bookings')
 
+# Owner dashboard
 @login_required
 def owner_dashboard(request):
     if request.user.profile.role != 'owner':
-        messages.error(request, 'Access denied. Owners only.')
+        messages.error(request, 'Access denied.')
         return redirect('home')
+    
     hotels = Hotel.objects.filter(owner=request.user)
     return render(request, 'core/owner_dashboard.html', {'hotels': hotels})
 
+# Add hotel
+@login_required
+def add_hotel(request):
+    if request.user.profile.role != 'owner':
+        messages.error(request, 'Only owners can add hotels.')
+        return redirect('home')
+    
+    if request.method == 'POST':
+        form = HotelForm(request.POST, request.FILES)
+        if form.is_valid():
+            hotel = form.save(commit=False)
+            hotel.owner = request.user
+            hotel.save()
+            form.save_m2m()
+            messages.success(request, 'Hotel added successfully!')
+            return redirect('owner_dashboard')
+    else:
+        form = HotelForm()
+    return render(request, 'core/add_hotel.html', {'form': form})
+
+# Edit hotel
+@login_required
+def edit_hotel(request, hotel_id):
+    hotel = get_object_or_404(Hotel, id=hotel_id, owner=request.user)
+    if request.method == 'POST':
+        form = HotelForm(request.POST, request.FILES, instance=hotel)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Hotel updated!')
+            return redirect('owner_dashboard')
+    else:
+        form = HotelForm(instance=hotel)
+    return render(request, 'core/edit_hotel.html', {'form': form, 'hotel': hotel})
+
+# Add room
+@login_required
+def add_room(request, hotel_id):
+    hotel = get_object_or_404(Hotel, id=hotel_id, owner=request.user)
+    if request.method == 'POST':
+        form = RoomForm(request.POST, request.FILES)
+        if form.is_valid():
+            room = form.save(commit=False)
+            room.hotel = hotel
+            room.save()
+            messages.success(request, 'Room added!')
+            return redirect('owner_dashboard')
+    else:
+        form = RoomForm()
+    return render(request, 'core/add_room.html', {'form': form, 'hotel': hotel})
+
+# Owner bookings (confirm/reject)
 @login_required
 def owner_bookings(request):
     if request.user.profile.role != 'owner':
@@ -135,144 +172,72 @@ def owner_bookings(request):
     
     return render(request, 'core/owner_bookings.html', {'bookings': bookings})
 
-from twilio.rest import Client
-
+# Confirm booking + payment calculation + WhatsApp
+@login_required
 def confirm_booking(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
     if request.user != booking.hotel.owner:
         messages.error(request, 'Access denied.')
         return redirect('owner_bookings')
     
+    # Calculate amount
+    nights = (booking.check_out - booking.check_in).days
+    price = booking.room.price_per_night if booking.room else booking.hotel.price_per_night
+    booking.amount = price * nights
     booking.status = 'confirmed'
     booking.save()
 
-    # WhatsApp notification to customer
+    # WhatsApp notification
     client = Client(settings.TWILIO_SID, settings.TWILIO_AUTH_TOKEN)
-    message = client.messages.create(
-        body=f"Your booking at {booking.hotel.name} from {booking.check_in} to {booking.check_out} is CONFIRMED!",
+    
+    customer_msg = f"Booking CONFIRMED at {booking.hotel.name}! Total Rs. {booking.amount}"
+    client.messages.create(
+        body=customer_msg,
         from_='whatsapp:' + settings.TWILIO_PHONE_NUMBER,
-        to='whatsapp:' + booking.user.profile.phone_number  # phone number profile එකේ තියෙනවා බලන්න
+        to='whatsapp:' + booking.user.profile.phone_number
     )
 
-    messages.success(request, 'Booking confirmed and notification sent!')
+    owner_msg = f"New CONFIRMED booking! Total Rs. {booking.amount}"
+    client.messages.create(
+        body=owner_msg,
+        from_='whatsapp:' + settings.TWILIO_PHONE_NUMBER,
+        to='whatsapp:' + settings.OWNER_PHONE
+    )
+
+    messages.success(request, 'Booking confirmed & notifications sent!')
     return redirect('owner_bookings')
+
+# Reject booking
 @login_required
 def reject_booking(request, booking_id):
-    booking = get_object_or_404(
-        Booking,
-        Q(id=booking_id),
-        Q(room__hotel__owner=request.user) | Q(hotel__owner=request.user, room=None)
-    )
+    booking = get_object_or_404(Booking, id=booking_id)
+    if request.user != booking.hotel.owner:
+        messages.error(request, 'Access denied.')
+        return redirect('owner_bookings')
     
-    if booking.status == 'pending':
-        booking.status = 'cancelled'
-        booking.save()
-        messages.success(request, f'Booking #{booking.id} rejected.')
-    else:
-        messages.info(request, 'This booking is already processed.')
+    booking.status = 'cancelled'
+    booking.save()
+    messages.success(request, 'Booking rejected.')
     return redirect('owner_bookings')
 
-@login_required
-def add_hotel(request):
-    if request.user.profile.role != 'owner':
-        messages.error(request, 'Only owners can add hotels.')
-        return redirect('home')
-    # rest of the code...
-    
-    if request.method == 'POST':
-        form = HotelForm(request.POST, request.FILES)
-        if form.is_valid():
-            hotel = form.save(commit=False)
-            hotel.owner = request.user
-            hotel.save()  # එක වතාවක් විතරයි save කරන්න
-            form.save_m2m()  # facilities save කරන්න
-            messages.success(request, 'Hotel added successfully!')
-            return redirect('owner_dashboard')
-    else:
-        form = HotelForm()
-    
-    return render(request, 'core/add_hotel.html', {'form': form})
-
-@login_required
-def edit_hotel(request, hotel_id):
-    hotel = get_object_or_404(Hotel, id=hotel_id, owner=request.user)
-    if request.method == 'POST':
-        form = HotelForm(request.POST, request.FILES, instance=hotel)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Hotel updated successfully!')
-            return redirect('owner_dashboard')
-    else:
-        form = HotelForm(instance=hotel)
-    return render(request, 'core/edit_hotel.html', {'form': form, 'hotel': hotel})
-
-@login_required
-def add_room(request, hotel_id):
-    hotel = get_object_or_404(Hotel, id=hotel_id, owner=request.user)
-    if request.method == 'POST':
-        form = RoomForm(request.POST, request.FILES)
-        if form.is_valid():
-            room = form.save(commit=False)
-            room.hotel = hotel
-            room.save()
-            messages.success(request, 'Room added successfully!')
-            return redirect('owner_dashboard')
-    else:
-        form = RoomForm()
-    return render(request, 'core/add_room.html', {'form': form, 'hotel': hotel})
-
+# Add manual booking + calculation
 @login_required
 def add_manual_booking(request, hotel_id):
     hotel = get_object_or_404(Hotel, id=hotel_id, owner=request.user)
     if request.method == 'POST':
         form = ManualBookingForm(request.POST)
         if form.is_valid():
-            check_in = form.cleaned_data['check_in']
-            check_out = form.cleaned_data['check_out']
-            overlapping = Booking.objects.filter(
-                hotel=hotel,
-                check_in__lt=check_out,
-                check_out__gt=check_in
-            ).exists()
-            if overlapping:
-                messages.error(request, 'Selected dates are already booked.')
-            else:
-                booking = form.save(commit=False)
-                booking.hotel = hotel
-                booking.room = None
-                booking.status = 'confirmed'
-                booking.customer = None
-                booking.save()
-                messages.success(request, f'Manual booking added from {booking.source}!')
-                return redirect('owner_dashboard')
+            booking = form.save(commit=False)
+            booking.hotel = hotel
+            booking.user = User.objects.get(username=form.cleaned_data['customer_username'])
+            # Calculate amount
+            nights = (booking.check_out - booking.check_in).days
+            price = booking.room.price_per_night if booking.room else hotel.price_per_night
+            booking.amount = price * nights
+            booking.status = 'confirmed'
+            booking.save()
+            messages.success(request, 'Manual booking added successfully!')
+            return redirect('owner_dashboard')
     else:
         form = ManualBookingForm()
     return render(request, 'core/add_manual_booking.html', {'form': form, 'hotel': hotel})
-
-@login_required
-def analytics_dashboard(request):
-    if request.user.profile.role != 'owner' and not request.user.is_superuser:
-        messages.error(request, 'Access denied.')
-        return redirect('home')
-    
-    total_users = User.objects.count()
-    total_customers = User.objects.filter(profile__role='customer').count()
-    total_owners = User.objects.filter(profile__role='owner').count()
-    
-    week_ago = timezone.now() - timedelta(days=7)
-    active_last_week = User.objects.filter(last_login__gte=week_ago).count()
-    
-    today = timezone.now().date()
-    today_logins = User.objects.filter(last_login__date=today).count()
-    
-    recent_logins = User.objects.filter(last_login__isnull=False).order_by('-last_login')[:10]
-    
-    context = {
-        'total_users': total_users,
-        'total_customers': total_customers,
-        'total_owners': total_owners,
-        'active_last_week': active_last_week,
-        'today_logins': today_logins,
-        'recent_logins': recent_logins,
-    }
-    return render(request, 'core/analytics_dashboard.html', context)
