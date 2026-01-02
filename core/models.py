@@ -2,19 +2,17 @@ from django.db import models
 from django.contrib.auth.models import User
 from multiselectfield import MultiSelectField
 
-# Role choices
+# Role choices - මේක top එකට add කරන්න
 ROLE_CHOICES = (
     ('customer', 'Customer'),
     ('owner', 'Owner'),
 )
 
-# Rented type choices
 RENTED_TYPE_CHOICES = (
     ('rooms', 'Individual Rooms'),
     ('full', 'Entire Villa'),
 )
 
-# AC type choices
 AC_TYPE_CHOICES = (
     ('ac', 'AC'),
     ('non_ac', 'Non-AC'),
@@ -23,7 +21,7 @@ AC_TYPE_CHOICES = (
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='customer')
-    phone_number = models.CharField(max_length=20, blank=True, null=True)  # WhatsApp number +94xxxxxxxxx
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
 
     def __str__(self):
         return self.user.username
@@ -48,7 +46,7 @@ class Hotel(models.Model):
         ('spa', 'Spa'),
     ], blank=True)
     rented_type = models.CharField(max_length=20, choices=RENTED_TYPE_CHOICES, default='rooms')
-    price_per_night = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)  # for full villa
+    price_per_night = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
 
     def __str__(self):
         return self.name
