@@ -35,7 +35,7 @@ class RegistrationForm(UserCreationForm):
 class HotelForm(forms.ModelForm):
     class Meta:
         model = Hotel
-        fields = ['name', 'address', 'description', 'main_image', 'photo1', 'photo2', 'photo3', 'photo4', 'facilities', 'rented_type', 'price_per_night']
+        fields = ['name', 'address', 'description', 'main_image', 'photo1', 'photo2', 'photo3', 'photo4', 'facilities', 'rented_type', 'price_per_night','google_location_link','facebook_page']
 
 class RoomForm(forms.ModelForm):
     class Meta:
