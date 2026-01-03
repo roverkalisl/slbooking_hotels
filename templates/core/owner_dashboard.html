@@ -4,73 +4,57 @@
 {% block title %}Owner Dashboard{% endblock %}
 
 {% block content %}
-<div class="container mt-5 mb-5">
-    <div class="row">
-        <div class="col-lg-12">
-            <h1 class="display-5 text-primary mb-4 text-center">
-                <i class="fas fa-tachometer-alt me-3"></i>Owner Dashboard
-            </h1>
+<div class="container mt-5">
+    <h1 class="text-center mb-5 display-5 fw-bold text-primary">Owner Dashboard</h1>
 
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
+    <!-- Buttons -->
+    <div class="text-center mb-5">
+        <a href="{% url 'owner_bookings' %}" class="btn btn-info btn-lg px-5 me-3">
+            <i class="fas fa-list-alt me-2"></i>View All Bookings (Confirm/Reject Pending)
+        </a>
+        <a href="{% url 'add_hotel' %}" class="btn btn-success btn-lg px-5">
+            <i class="fas fa-plus me-2"></i>Add New Hotel/Villa
+        </a>
+    </div>
 
-            <div class="text-end mb-4">
-                <a href="{% url 'add_hotel' %}" class="btn btn-success btn-lg">
-                    <i class="fas fa-plus-circle me-2"></i>Add New Hotel/Villa
-                </a>
-            </div>
-
-            {% if hotels %}
-                <div class="row">
-                    {% for hotel in hotels %}
-                        <div class="col-md-6 col-lg-4 mb-4">
-                            <div class="card shadow-sm h-100">
-                                {% if hotel.main_image %}
-                                    <img src="{{ hotel.main_image.url }}" class="card-img-top" alt="{{ hotel.name }}" style="height: 200px; object-fit: cover;">
-                                {% else %}
-                                    <div class="bg-light text-center py-5" style="height: 200px;">
-                                        <i class="fas fa-hotel fa-3x text-muted"></i>
-                                    </div>
+    {% if hotels %}
+        <div class="row">
+            {% for hotel in hotels %}
+                <div class="col-md-6 col-lg-4 mb-5">
+                    <div class="card shadow-sm h-100">
+                        {% if hotel.main_image %}
+                            <img src="{{ hotel.main_image.url }}" class="card-img-top" alt="{{ hotel.name }}" style="height: 250px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-light text-center py-5" style="height: 250px;">
+                                <i class="fas fa-hotel fa-4x text-muted"></i>
+                            </div>
+                        {% endif %}
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ hotel.name }}</h5>
+                            <p class="card-text"><i class="fas fa-map-marker-alt me-2"></i>{{ hotel.address }}</p>
+                            <p class="card-text text-muted">Rented as: {{ hotel.get_rented_type_display }}</p>
+                            <div class="mt-auto">
+                                <a href="{% url 'edit_hotel' hotel.id %}" class="btn btn-warning btn-sm me-1 mb-1">
+                                    <i class="fas fa-edit me-1"></i>Edit Hotel
+                                </a>
+                                {% if hotel.rented_type == 'rooms' %}
+                                    <a href="{% url 'add_room' hotel.id %}" class="btn btn-primary btn-sm me-1 mb-1">
+                                        <i class="fas fa-bed me-1"></i>Add Room
+                                    </a>
                                 {% endif %}
-                                <div class="card-body d-flex flex-column">
-                                    <h5 class="card-title">{{ hotel.name }}</h5>
-                                    <p class="card-text"><i class="fas fa-map-marker-alt me-1"></i>{{ hotel.address }}</p>
-                                    <p class="card-text"><strong>Rented as:</strong> {{ hotel.get_rented_type_display }}</p>
-                                    <div class="mt-auto">
-                                        <a href="{% url 'edit_hotel' hotel.id %}" class="btn btn-warning btn-sm me-2 mb-2">
-                                            <i class="fas fa-edit me-1"></i>Edit
-                                        </a>
-                                        <a href="{% url 'add_room' hotel.id %}" class="btn btn-primary btn-sm me-2 mb-2">
-                                            <i class="fas fa-bed me-1"></i>Add Room
-                                        </a>
-                                        <a href="{% url 'add_manual_booking' hotel.id %}" class="btn btn-secondary btn-sm mb-2">
-                                            <i class="fas fa-plus-circle me-1"></i>Add Manual Booking
-                                        </a>
-                                    </div>
-                                </div>
+                                <a href="{% url 'add_manual_booking' hotel.id %}" class="btn btn-secondary btn-sm mb-1">
+                                    <i class="fas fa-calendar-plus me-1"></i>Add Manual Booking
+                                </a>
                             </div>
                         </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="text-center py-5">
-                    <div class="alert alert-info d-inline-block px-5 py-4">
-                        <i class="fas fa-info-circle fa-3x mb-3 text-info"></i>
-                        <h4>You have no hotels listed yet.</h4>
-                        <p class="mb-4">Start by adding your first property!</p>
-                        <a href="{% url 'add_hotel' %}" class="btn btn-success btn-lg">
-                            <i class="fas fa-plus-circle me-2"></i>Add Your First Hotel/Villa
-                        </a>
                     </div>
                 </div>
-            {% endif %}
+            {% endfor %}
         </div>
-    </div>
+    {% else %}
+        <div class="text-center py-5">
+            <p class="text-muted fs-4">No hotels added yet. Click "Add New Hotel/Villa" to get started!</p>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}

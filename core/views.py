@@ -90,6 +90,15 @@ def my_bookings(request):
     bookings = Booking.objects.filter(user=request.user).order_by('-id')
     return render(request, 'core/my_bookings.html', {'bookings': bookings})
 
+@login_required
+def owner_dashboard(request):
+    if request.user.profile.role != 'owner':
+        messages.error(request, 'Only owners can access this page.')
+        return redirect('home')
+    
+    hotels = Hotel.objects.filter(owner=request.user)
+    return render(request, 'core/owner_dashboard.html', {'hotels': hotels})
+
 # Cancel booking
 @login_required
 def cancel_booking(request, booking_id):
@@ -102,14 +111,15 @@ def cancel_booking(request, booking_id):
 
 # Owner dashboard
 @login_required
-def owner_dashboard(request):
+def owner_bookings(request):
     if request.user.profile.role != 'owner':
         messages.error(request, 'Access denied.')
         return redirect('home')
     
-    hotels = Hotel.objects.filter(owner=request.user)
-    return render(request, 'core/owner_dashboard.html', {'hotels': hotels})
-
+    # හැම hotel එකක bookings එකම ගන්න (room එක තියෙන/නැති හැම එකම)
+    bookings = Booking.objects.filter(hotel__owner=request.user).order_by('-id')
+    
+    return render(request, 'core/owner_bookings.html', {'bookings': bookings})
 # Add hotel
 @login_required
 def add_hotel(request):
@@ -188,26 +198,33 @@ def confirm_booking(request, booking_id):
     booking.status = 'confirmed'
     booking.save()
 
-    # WhatsApp notification
-    client = Client(settings.TWILIO_SID, settings.TWILIO_AUTH_TOKEN)
-    
-    customer_msg = f"Booking CONFIRMED at {booking.hotel.name}! Total Rs. {booking.amount}"
-    client.messages.create(
-        body=customer_msg,
-        from_='whatsapp:' + settings.TWILIO_PHONE_NUMBER,
-        to='whatsapp:' + booking.user.profile.phone_number
-    )
+    # WhatsApp notification - try/except එකක් දාලා error එක catch කරමු
+    try:
+        if settings.TWILIO_SID and settings.TWILIO_AUTH_TOKEN and settings.TWILIO_PHONE_NUMBER:
+            client = Client(settings.TWILIO_SID, settings.TWILIO_AUTH_TOKEN)
+            
+            customer_phone = booking.user.profile.phone_number
+            if customer_phone:
+                customer_msg = f"🎉 Your booking at {booking.hotel.name} is CONFIRMED! Total: Rs. {booking.amount}"
+                client.messages.create(
+                    body=customer_msg,
+                    from_='whatsapp:' + settings.TWILIO_PHONE_NUMBER,
+                    to='whatsapp:' + customer_phone
+                )
+            
+            if settings.OWNER_PHONE:
+                owner_msg = f"✅ New CONFIRMED booking at {booking.hotel.name}! Total Rs. {booking.amount}"
+                client.messages.create(
+                    body=owner_msg,
+                    from_='whatsapp:' + settings.TWILIO_PHONE_NUMBER,
+                    to='whatsapp:' + settings.OWNER_PHONE
+                )
+    except Exception as e:
+        # Error එක එනවා නම් message එකක් පේනවා – site crash වෙන්නේ නැහැ
+        messages.warning(request, f'Booking confirmed but WhatsApp notification failed: {str(e)}')
 
-    owner_msg = f"New CONFIRMED booking! Total Rs. {booking.amount}"
-    client.messages.create(
-        body=owner_msg,
-        from_='whatsapp:' + settings.TWILIO_PHONE_NUMBER,
-        to='whatsapp:' + settings.OWNER_PHONE
-    )
-
-    messages.success(request, 'Booking confirmed & notifications sent!')
+    messages.success(request, 'Booking confirmed successfully!')
     return redirect('owner_bookings')
-
 # Reject booking
 @login_required
 def reject_booking(request, booking_id):
