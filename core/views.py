@@ -15,17 +15,18 @@ def home(request):
     return render(request, 'core/home.html', {'hotels': hotels})
 
 # Register
+from .forms import RegistrationForm  # මේක import කරන්න (UserCreationForm නෙමෙයි)
+
 def register(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = RegistrationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            Profile.objects.create(user=user, role='customer')  # default customer
-            login(request, user)
+            form.save()  # custom save method එක run වෙනවා (email, phone, role save වෙනවා)
             messages.success(request, 'Registration successful!')
-            return redirect('home')
+            return redirect('login')  # or 'home'
     else:
-        form = UserCreationForm()
+        form = RegistrationForm()
+    
     return render(request, 'core/register.html', {'form': form})
 
 # Search hotels
