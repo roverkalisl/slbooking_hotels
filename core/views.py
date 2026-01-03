@@ -184,6 +184,7 @@ def owner_bookings(request):
     return render(request, 'core/owner_bookings.html', {'bookings': bookings})
 
 # Confirm booking + payment calculation + WhatsApp
+from twilio.rest import Client  # මේක import කරන්න
 @login_required
 def confirm_booking(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
@@ -198,34 +199,28 @@ def confirm_booking(request, booking_id):
     booking.status = 'confirmed'
     booking.save()
 
-    # WhatsApp notification - try/except එකක් දාලා error එක catch කරමු
+    # WhatsApp notification with error handling
     try:
-        if settings.TWILIO_SID and settings.TWILIO_AUTH_TOKEN and settings.TWILIO_PHONE_NUMBER:
-            client = Client(settings.TWILIO_SID, settings.TWILIO_AUTH_TOKEN)
-            
-            customer_phone = booking.user.profile.phone_number
-            if customer_phone:
-                customer_msg = f"🎉 Your booking at {booking.hotel.name} is CONFIRMED! Total: Rs. {booking.amount}"
-                client.messages.create(
-                    body=customer_msg,
-                    from_='whatsapp:' + settings.TWILIO_PHONE_NUMBER,
-                    to='whatsapp:' + customer_phone
-                )
-            
-            if settings.OWNER_PHONE:
-                owner_msg = f"✅ New CONFIRMED booking at {booking.hotel.name}! Total Rs. {booking.amount}"
-                client.messages.create(
-                    body=owner_msg,
-                    from_='whatsapp:' + settings.TWILIO_PHONE_NUMBER,
-                    to='whatsapp:' + settings.OWNER_PHONE
-                )
+        client = Client(settings.TWILIO_SID, settings.TWILIO_AUTH_TOKEN)
+        
+        customer_msg = f"🎉 Your booking at {booking.hotel.name} is CONFIRMED! Total: Rs. {booking.amount}"
+        client.messages.create(
+            body=customer_msg,
+            from_='whatsapp:' + settings.TWILIO_PHONE_NUMBER,
+            to='whatsapp:' + booking.user.profile.phone_number
+        )
+        
+        owner_msg = f"✅ New CONFIRMED booking! Total Rs. {booking.amount}"
+        client.messages.create(
+            body=owner_msg,
+            from_='whatsapp:' + settings.TWILIO_PHONE_NUMBER,
+            to='whatsapp:' + settings.OWNER_PHONE
+        )
     except Exception as e:
-        # Error එක එනවා නම් message එකක් පේනවා – site crash වෙන්නේ නැහැ
-        messages.warning(request, f'Booking confirmed but WhatsApp notification failed: {str(e)}')
+        messages.warning(request, 'Booking confirmed, but notification failed. Check Twilio settings.')
 
-    messages.success(request, 'Booking confirmed successfully!')
+    messages.success(request, 'Booking confirmed!')
     return redirect('owner_bookings')
-# Reject booking
 @login_required
 def reject_booking(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)

@@ -111,10 +111,11 @@ CLOUDINARY_STORAGE = {
 }
 
 # Twilio config (optional)
-TWILIO_SID = config('TWILIO_SID', default='')
-TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN', default='')
-TWILIO_PHONE_NUMBER = config('TWILIO_PHONE_NUMBER', default='')
-OWNER_PHONE = config('OWNER_PHONE', default='')
+# Twilio for WhatsApp notifications
+TWILIO_SID = 'ACb0297ddadc17bf00ce312f3f100b78ae'  # Twilio dashboard එකේ ගන්න
+TWILIO_AUTH_TOKEN = 'd7148a2e1f1827fb3ba7fbb10995929f'  # Twilio dashboard එකේ ගන්න
+TWILIO_PHONE_NUMBER = '+12512552335'  # Twilio WhatsApp sandbox number (or your number)
+OWNER_PHONE = '+94740948966'  # Owner එකගේ WhatsApp number (E.164 format)
 
 # Login redirect
 LOGIN_REDIRECT_URL = '/'
