@@ -192,7 +192,7 @@ def confirm_booking(request, booking_id):
         messages.error(request, 'Access denied.')
         return redirect('owner_bookings')
     
-    # Calculate amount
+    # Calculate amount (your existing code)
     nights = (booking.check_out - booking.check_in).days
     price = booking.room.price_per_night if booking.room else booking.hotel.price_per_night
     booking.amount = price * nights
@@ -203,23 +203,25 @@ def confirm_booking(request, booking_id):
     try:
         client = Client(settings.TWILIO_SID, settings.TWILIO_AUTH_TOKEN)
         
-        customer_msg = f"🎉 Your booking at {booking.hotel.name} is CONFIRMED! Total: Rs. {booking.amount}"
+        # Customer notification
+        customer_msg = f"🎉 Your booking at {booking.hotel.name} is CONFIRMED! Dates: {booking.check_in} to {booking.check_out}. Total: Rs. {booking.amount}."
         client.messages.create(
             body=customer_msg,
             from_='whatsapp:' + settings.TWILIO_PHONE_NUMBER,
-            to='whatsapp:' + booking.user.profile.phone_number
+            to='whatsapp:' + booking.user.profile.phone_number if booking.user.profile.phone_number else ''
         )
         
-        owner_msg = f"✅ New CONFIRMED booking! Total Rs. {booking.amount}"
+        # Owner notification
+        owner_msg = f"✅ New CONFIRMED booking at {booking.hotel.name}! Customer: {booking.user.username}. Total Rs. {booking.amount}."
         client.messages.create(
             body=owner_msg,
             from_='whatsapp:' + settings.TWILIO_PHONE_NUMBER,
             to='whatsapp:' + settings.OWNER_PHONE
         )
+        messages.success(request, 'Booking confirmed and notifications sent!')
     except Exception as e:
-        messages.warning(request, 'Booking confirmed, but notification failed. Check Twilio settings.')
-
-    messages.success(request, 'Booking confirmed!')
+        messages.warning(request, f'Booking confirmed, but notification failed: {str(e)}. Check Twilio settings.')
+    
     return redirect('owner_bookings')
 @login_required
 def reject_booking(request, booking_id):
