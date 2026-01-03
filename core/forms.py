@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Hotel, Room, Booking
+from .models import Hotel, Room, Booking, Profile  # මෙතන Profile add කරන්න
 
 # ROLE_CHOICES මෙතන hardcode කරලා තියෙනවා (models.py එකට ඉස්සරහට import වෙන problem නැහැ)
 ROLE_CHOICES = (

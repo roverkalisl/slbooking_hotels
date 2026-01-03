@@ -17,54 +17,36 @@
                         <div class="mb-3">
                             <label class="form-label">Username</label>
                             {{ form.username }}
-                            {% if form.username.errors %}
-                                <div class="text-danger small">{{ form.username.errors }}</div>
-                            {% endif %}
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label">Email Address</label>
                             {{ form.email }}
-                            {% if form.email.errors %}
-                                <div class="text-danger small">{{ form.email.errors }}</div>
-                            {% endif %}
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label">Phone Number (optional for WhatsApp)</label>
                             {{ form.phone_number }}
-                            {% if form.phone_number.errors %}
-                                <div class="text-danger small">{{ form.phone_number.errors }}</div>
-                            {% endif %}
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label">I am a</label>
                             {{ form.role }}
-                            {% if form.role.errors %}
-                                <div class="text-danger small">{{ form.role.errors }}</div>
-                            {% endif %}
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label">Password</label>
                             {{ form.password1 }}
-                            {% if form.password1.errors %}
-                                <div class="text-danger small">{{ form.password1.errors }}</div>
-                            {% endif %}
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label">Confirm Password</label>
                             {{ form.password2 }}
-                            {% if form.password2.errors %}
-                                <div class="text-danger small">{{ form.password2.errors }}</div>
-                            {% endif %}
                         </div>
                         
-                        {% if form.non_field_errors %}
+                        {% if form.errors %}
                             <div class="alert alert-danger mb-3">
-                                {{ form.non_field_errors }}
+                                {{ form.errors }}
                             </div>
                         {% endif %}
                         
@@ -72,7 +54,7 @@
                     </form>
                     
                     <p class="text-center mt-4">
-                        Already have an account? <a href="{% url 'login' %}" class="text-decoration-none">Login here</a>
+                        Already have an account? <a href="{% url 'login' %}">Login here</a>
                     </p>
                 </div>
             </div>
