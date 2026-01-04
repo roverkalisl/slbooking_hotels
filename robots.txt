@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://www.slbooking.hotel.lk/sitemap.xml

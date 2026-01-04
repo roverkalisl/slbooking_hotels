@@ -1,0 +1,42 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Contact Us{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <h1 class="text-center mb-5 display-5 fw-bold text-primary">Contact Us</h1>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <p class="lead text-center mb-5">We're here to help! Fill out the form below, and we'll get back to you soon.</p>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Name</label>
+                    <input type="text" name="name" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Message</label>
+                    <textarea name="message" class="form-control" rows="5" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Send Message</button>
+            </form>
+            
+            <h4 class="mt-5 mb-3">Our Contact Info</h4>
+            <p><strong>Email:</strong> roverkalisl@gmail.com</p>
+            <p><strong>Phone:</strong> +94 74 0948 966</p>
+            <p><strong>Address:</strong> Galle, Sri Lanka</p>
+            
+            <div class="text-center mt-5">
+                <a href="{% url 'home' %}" class="btn btn-primary btn-lg">Back to Home</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

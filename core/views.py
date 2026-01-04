@@ -256,3 +256,19 @@ def add_manual_booking(request, hotel_id):
     else:
         form = ManualBookingForm()
     return render(request, 'core/add_manual_booking.html', {'form': form, 'hotel': hotel})
+def about(request):
+    return render(request, 'core/about.html')
+
+def privacy_policy(request):
+    return render(request, 'core/privacy_policy.html')
+
+def contact(request):
+    if request.method == 'POST':
+        # Simple contact form logic (email send කරන්න පුළුවන්)
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        message = request.POST.get('message')
+        # මෙතන email send code එක දාන්න (optional)
+        messages.success(request, 'Your message has been sent!')
+        return redirect('contact')
+    return render(request, 'core/contact.html')

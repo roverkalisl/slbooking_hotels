@@ -1,0 +1,31 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}About Us{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <h1 class="text-center mb-5 display-5 fw-bold text-primary">About SL Booking Hotels</h1>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <p class="lead text-center mb-5">SL Booking Hotels is a leading online platform for discovering and booking the best hotels and villas across Sri Lanka. We connect travelers with unique accommodations, making it easy to find the perfect stay for every trip.</p>
+            
+            <h3 class="mb-4">Our Mission</h3>
+            <p>To make travel planning simple and affordable, offering a seamless booking experience with secure payments and instant confirmations.</p>
+            
+            <h3 class="mb-4">Why Choose Us?</h3>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item"><i class="fas fa-check text-success me-2"></i>Wide selection of hotels and villas</li>
+                <li class="list-group-item"><i class="fas fa-check text-success me-2"></i>Real-time availability and pricing</li>
+                <li class="list-group-item"><i class="fas fa-check text-success me-2"></i>Secure and easy booking process</li>
+                <li class="list-group-item"><i class="fas fa-check text-success me-2"></i>24/7 customer support</li>
+            </ul>
+            
+            <div class="text-center mt-5">
+                <a href="{% url 'home' %}" class="btn btn-primary btn-lg">Back to Home</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
