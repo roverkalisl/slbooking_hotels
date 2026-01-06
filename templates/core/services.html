@@ -1,0 +1,74 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Our Services & Partners{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <h1 class="text-center mb-5 display-5 fw-bold text-primary">Our Services & Partners</h1>
+    
+    <p class="lead text-center mb-5">We partner with trusted professionals to offer additional services for property owners and travelers.</p>
+    
+    <div class="row g-4">
+        <!-- Service 1: Photographer -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-primary"><i class="fas fa-camera me-2"></i>Property Photography</h5>
+                    <p class="card-text">
+                        <strong>Mr. Nishan Mal</strong><br>
+                        Pristine Moment Photography<br><br>
+                        Professional hotel/villa photography<br>
+                        Booking site updates (Booking.com, Agoda, Airbnb)
+                    </p>
+                    <p class="mt-auto">
+                        <strong>Contact:</strong> <a href="tel:+94779606117" class="text-primary">077 960 6117</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Service 2: Landscape -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-success"><i class="fas fa-leaf me-2"></i>Landscape & Garden Service</h5>
+                    <p class="card-text">
+                        <strong>Mr. Dushan Kodagoda</strong><br>
+                        Southern Garden Maintain & Design<br><br>
+                        Professional garden design and maintenance for properties
+                    </p>
+                    <p class="mt-auto">
+                        <strong>Contact:</strong> <a href="tel:+94770850820" class="text-success">+94 77 085 0820</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Service 3: Social Media Promotion -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-info"><i class="fas fa-bullhorn me-2"></i>Social Media Promotion</h5>
+                    <p class="card-text">
+                        <strong>Mr. Krishantha Weerakoon</strong><br>
+                        Virtual Hub Sri Lanka<br><br>
+                        Facebook, TikTok, Instagram management<br>
+                        Business promotion & advertising
+                    </p>
+                    <p class="mt-auto">
+                        <strong>Contact:</strong> 
+                        <a href="tel:+94740948966" class="text-info">074 094 8966</a> / 
+                        <a href="tel:+94727948966" class="text-info">072 794 8966</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="text-center mt-5">
+        <p class="fs-5">Interested in partnering with us? Contact us!</p>
+        <a href="{% url 'contact' %}" class="btn btn-primary btn-lg">Get in Touch</a>
+    </div>
+</div>
+{% endblock %}
