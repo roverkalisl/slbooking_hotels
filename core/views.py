@@ -8,7 +8,7 @@ from .forms import HotelForm, RoomForm, BookingForm, ManualBookingForm
 from django.contrib.auth.forms import UserCreationForm
 from twilio.rest import Client
 from django.conf import settings
-
+from django.views.decorators.cache import never_cache
 # Home page
 def home(request):
     hotels = Hotel.objects.all()[:6]  # featured hotels
@@ -280,3 +280,18 @@ def contact(request):
 
 def services(request):
     return render(request, 'core/services.html')
+
+@never_cache
+def home(request):
+    hotels = Hotel.objects.all()[:6]  # featured hotels (first 6)
+
+    # View count (session based)
+    if 'view_count' not in request.session:
+        request.session['view_count'] = 0
+    request.session['view_count'] += 1
+    view_count = request.session['view_count']
+
+    return render(request, 'core/home.html', {
+        'hotels': hotels,
+        'view_count': view_count
+    })
