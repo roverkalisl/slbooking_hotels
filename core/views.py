@@ -262,13 +262,21 @@ def about(request):
 def privacy_policy(request):
     return render(request, 'core/privacy_policy.html')
 
+@login_required  # optional – login වෙලා තියෙනවා නම්
 def contact(request):
     if request.method == 'POST':
-        # Simple contact form logic (email send කරන්න පුළුවන්)
         name = request.POST.get('name')
         email = request.POST.get('email')
         message = request.POST.get('message')
-        # මෙතන email send code එක දාන්න (optional)
-        messages.success(request, 'Your message has been sent!')
+        # මෙතන email send code එක තියෙනවා නම් try/except දාන්න
+        try:
+            # email send logic (if any)
+            messages.success(request, 'Your message has been sent!')
+        except Exception as e:
+            messages.error(request, 'Message sending failed. Try again later.')
         return redirect('contact')
+    
     return render(request, 'core/contact.html')
+
+def services(request):
+    return render(request, 'core/services.html')
