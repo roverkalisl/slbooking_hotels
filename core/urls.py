@@ -1,6 +1,6 @@
-# core/urls.py
 from django.urls import path
 from . import views
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -11,6 +11,8 @@ urlpatterns = [
     path('book-villa/<int:hotel_id>/', views.book_villa, name='book_villa'),
     path('my-bookings/', views.my_bookings, name='my_bookings'),
     path('booking/<int:booking_id>/cancel/', views.cancel_booking, name='cancel_booking'),
+    
+    # Owner paths
     path('owner/dashboard/', views.owner_dashboard, name='owner_dashboard'),
     path('owner/add-hotel/', views.add_hotel, name='add_hotel'),
     path('owner/edit-hotel/<int:hotel_id>/', views.edit_hotel, name='edit_hotel'),
@@ -19,10 +21,16 @@ urlpatterns = [
     path('owner/confirm-booking/<int:booking_id>/', views.confirm_booking, name='confirm_booking'),
     path('owner/reject-booking/<int:booking_id>/', views.reject_booking, name='reject_booking'),
     path('owner/hotel/<int:hotel_id>/add-manual-booking/', views.add_manual_booking, name='add_manual_booking'),
-    path('owner/bookings/', views.owner_bookings, name='owner_bookings'),path('about/', views.about, name='about'),
+    
+    # Static pages
+    path('about/', views.about, name='about'),
     path('privacy-policy/', views.privacy_policy, name='privacy_policy'),
     path('contact/', views.contact, name='contact'),
     path('services/', views.services, name='services'),
-
-#path('analytics/', views.analytics_dashboard, name='analytics_dashboard'),
+    
+    # Logout
+    path('logout/', auth_views.LogoutView.as_view(next_page='home'), name='logout'),
+    
+    # Commented analytics (optional)
+    # path('analytics/', views.analytics_dashboard, name='analytics_dashboard'),
 ]
