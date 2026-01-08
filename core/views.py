@@ -245,7 +245,7 @@ def confirm_booking(request, booking_id):
     
     messages.success(request, msg)
     return redirect('owner_bookings')
-@login_required
+    @login_required
 def reject_booking(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
     if request.user != booking.hotel.owner:
