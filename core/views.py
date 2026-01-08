@@ -9,6 +9,8 @@ from django.contrib.auth.forms import UserCreationForm
 from twilio.rest import Client
 from django.conf import settings
 from django.views.decorators.cache import never_cache
+import requests
+from django.conf import settings
 # Home page
 def home(request):
     hotels = Hotel.objects.all()[:6]  # featured hotels
@@ -184,7 +186,6 @@ def owner_bookings(request):
     return render(request, 'core/owner_bookings.html', {'bookings': bookings})
 
 # Confirm booking + payment calculation + WhatsApp
-from twilio.rest import Client  # මේක import කරන්න
 @login_required
 def confirm_booking(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
@@ -192,36 +193,57 @@ def confirm_booking(request, booking_id):
         messages.error(request, 'Access denied.')
         return redirect('owner_bookings')
     
-    # Calculate amount (your existing code)
+    # Calculate amount
     nights = (booking.check_out - booking.check_in).days
     price = booking.room.price_per_night if booking.room else booking.hotel.price_per_night
     booking.amount = price * nights
     booking.status = 'confirmed'
     booking.save()
 
-    # WhatsApp notification with error handling
-    try:
-        client = Client(settings.TWILIO_SID, settings.TWILIO_AUTH_TOKEN)
-        
-        # Customer notification
-        customer_msg = f"🎉 Your booking at {booking.hotel.name} is CONFIRMED! Dates: {booking.check_in} to {booking.check_out}. Total: Rs. {booking.amount}."
-        client.messages.create(
-            body=customer_msg,
-            from_='whatsapp:' + settings.TWILIO_PHONE_NUMBER,
-            to='whatsapp:' + booking.user.profile.phone_number if booking.user.profile.phone_number else ''
-        )
-        
-        # Owner notification
-        owner_msg = f"✅ New CONFIRMED booking at {booking.hotel.name}! Customer: {booking.user.username}. Total Rs. {booking.amount}."
-        client.messages.create(
-            body=owner_msg,
-            from_='whatsapp:' + settings.TWILIO_PHONE_NUMBER,
-            to='whatsapp:' + settings.OWNER_PHONE
-        )
-        messages.success(request, 'Booking confirmed and notifications sent!')
-    except Exception as e:
-        messages.warning(request, f'Booking confirmed, but notification failed: {str(e)}. Check Twilio settings.')
+    # SMS to Customer
+    customer_phone = booking.user.profile.phone_number
+    sms_sent_to_customer = False
+    if customer_phone:
+        try:
+            url = "https://textit.biz/sendmsg/index.php"
+            payload = {
+                "id": settings.TEXTIT_API_ID,
+                "pw": settings.TEXTIT_API_PASSWORD,
+                "to": customer_phone,
+                "text": f"🎉 Your booking at {booking.hotel.name} is CONFIRMED!\nCheck-in: {booking.check_in}\nCheck-out: {booking.check_out}\nTotal: Rs. {booking.amount}\nThank you! - SL Booking Hotels"
+            }
+            response = requests.get(url, params=payload, timeout=10)
+            if response.status_code == 200 and "OK" in response.text:
+                sms_sent_to_customer = True
+        except Exception as e:
+            messages.warning(request, f'Customer SMS failed: {str(e)}')
+
+    # SMS Alert to Owner
+    sms_sent_to_owner = False
+    if settings.OWNER_ALERT_PHONE:
+        try:
+            owner_payload = {
+                "id": settings.TEXTIT_API_ID,
+                "pw": settings.TEXTIT_API_PASSWORD,
+                "to": settings.OWNER_ALERT_PHONE,
+                "text": f"✅ New CONFIRMED booking!\nHotel: {booking.hotel.name}\nCustomer: {booking.user.username}\nPhone: {customer_phone or 'Not provided'}\nCheck-in: {booking.check_in}\nCheck-out: {booking.check_out}\nTotal: Rs. {booking.amount}\n- SL Booking Hotels"
+            }
+            owner_response = requests.get(url, params=owner_payload, timeout=10)
+            if owner_response.status_code == 200 and "OK" in owner_response.text:
+                sms_sent_to_owner = True
+        except Exception as e:
+            messages.warning(request, f'Owner alert SMS failed: {str(e)}')
+
+    # Success message
+    msg = 'Booking confirmed!'
+    if sms_sent_to_customer and sms_sent_to_owner:
+        msg += ' SMS sent to customer & owner!'
+    elif sms_sent_to_customer:
+        msg += ' SMS sent to customer!'
+    elif sms_sent_to_owner:
+        msg += ' Alert SMS sent to owner!'
     
+    messages.success(request, msg)
     return redirect('owner_bookings')
 @login_required
 def reject_booking(request, booking_id):
