@@ -4,6 +4,14 @@ body {
 }
 .card {
     border-radius: 15px;
+    transition: transform 0.2s;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+.jumbotron {
+    background-color: #007bff;
+    color: white;
 }
 .btn-primary {
     background-color: #007bff;
