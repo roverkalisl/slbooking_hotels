@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from multiselectfield import MultiSelectField
 
-# Role choices - මේක top එකට add කරන්න
+# Choices
 ROLE_CHOICES = (
     ('customer', 'Customer'),
     ('owner', 'Owner'),
@@ -16,6 +16,26 @@ RENTED_TYPE_CHOICES = (
 AC_TYPE_CHOICES = (
     ('ac', 'AC'),
     ('non_ac', 'Non-AC'),
+)
+
+STATUS_CHOICES = (
+    ('pending', 'Pending'),
+    ('confirmed', 'Confirmed'),
+    ('cancelled', 'Cancelled'),
+)
+
+FACILITIES_CHOICES = (
+    ('wifi', 'WiFi'),
+    ('pool', 'Swimming Pool'),
+    ('parking', 'Parking'),
+    ('restaurant', 'Restaurant'),
+    ('spa', 'Spa'),
+    ('gym', 'Gym'),
+    ('bar', 'Bar'),
+    ('ac', 'Air Conditioning'),
+    ('tv', 'TV'),
+    ('hot_water', 'Hot Water'),
+    ('room_service', 'Room Service'),
 )
 
 class Profile(models.Model):
@@ -36,22 +56,15 @@ class Hotel(models.Model):
     photo2 = models.ImageField(upload_to='hotels/', blank=True, null=True)
     photo3 = models.ImageField(upload_to='hotels/', blank=True, null=True)
     photo4 = models.ImageField(upload_to='hotels/', blank=True, null=True)
-    facilities = MultiSelectField(choices=[
-        ('wifi', 'Free WiFi'),
-        ('pool', 'Swimming Pool'),
-        ('parking', 'Parking'),
-        ('restaurant', 'Restaurant'),
-        ('ac', 'Air Conditioning'),
-        ('gym', 'Gym'),
-        ('spa', 'Spa'),
-    ], blank=True)
+    facilities = MultiSelectField(choices=FACILITIES_CHOICES, blank=True)
     rented_type = models.CharField(max_length=20, choices=RENTED_TYPE_CHOICES, default='rooms')
     price_per_night = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    google_location_link = models.URLField(blank=True, null=True, verbose_name="Google Maps Link")    
-    facebook_page = models.URLField(blank=True, null=True, verbose_name="Facebook Page Link")  # මේක add කරන්න
+    google_location_link = models.URLField(blank=True, null=True, verbose_name="Google Maps Link")
+    facebook_page = models.URLField(blank=True, null=True, verbose_name="Facebook Page Link")
 
     def __str__(self):
         return self.name
+
 class Room(models.Model):
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='rooms')
     room_number = models.CharField(max_length=10)
@@ -61,17 +74,12 @@ class Room(models.Model):
     image = models.ImageField(upload_to='rooms/', blank=True, null=True)
 
     def __str__(self):
-        return f"{self.room_number} - {self.room_type}"
+        return f"{self.room_number} - {self.hotel.name}"
 
 class Booking(models.Model):
-    STATUS_CHOICES = (
-        ('pending', 'Pending'),
-        ('confirmed', 'Confirmed'),
-        ('cancelled', 'Cancelled'),
-    )
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookings')
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='bookings')
     room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     check_in = models.DateField()
     check_out = models.DateField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
@@ -79,3 +87,9 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.hotel.name} ({self.status})"
+
+class SiteStats(models.Model):
+    total_views = models.BigIntegerField(default=0)
+
+    def __str__(self):
+        return f"Total Views: {self.total_views}"
