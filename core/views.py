@@ -11,6 +11,7 @@ from django.conf import settings
 from django.views.decorators.cache import never_cache
 import requests
 from django.conf import settings
+from django.http import HttpResponse
 # Home page
 def home(request):
     hotels = Hotel.objects.all()[:6]  # featured hotels
@@ -333,3 +334,6 @@ def home(request):
         'hotels': hotels,
         'view_count': view_count
     })
+def ads_txt(request):
+    content = "google.com, pub-7289676285085159, DIRECT, f08c47fec0942fa0"
+    return HttpResponse(content, content_type="text/plain")
