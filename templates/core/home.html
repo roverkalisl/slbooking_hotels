@@ -4,28 +4,53 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <!-- Hero Section -->
-    <div class="jumbotron bg-primary text-white rounded p-5 mb-5 text-center">
-        <h1 class="display-4 fw-bold">Welcome to Hotel Booking Sri Lanka</h1>
-        <p class="lead fs-4">Find and book the best hotels and villas across Sri Lanka</p>
-        <a href="{% url 'search_hotels' %}" class="btn btn-light btn-lg mt-3">
-            <i class="fas fa-search me-2"></i>Search Hotels
-        </a>
+<!-- Hero Section with Search Form -->
+<div class="bg-primary text-white py-5">
+    <div class="container">
+        <h1 class="display-4 fw-bold text-center mb-4">Welcome to Hotel Booking Sri Lanka</h1>
+        <p class="lead text-center mb-5">Find and book the best hotels and villas across Sri Lanka</p>
+        
+        <!-- Search Form -->
+        <form action="{% url 'search_hotels' %}" method="get" class="row g-3 justify-content-center">
+            <div class="col-md-4">
+                <input type="text" name="q" class="form-control form-control-lg rounded-pill" placeholder="Where to? (e.g., Galle, Colombo)" required>
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="check_in" class="form-control form-control-lg" required>
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="check_out" class="form-control form-control-lg" required>
+            </div>
+            <div class="col-md-2">
+                <select name="rooms" class="form-select form-select-lg">
+                    <option value="1">1 Room</option>
+                    <option value="2">2 Rooms</option>
+                    <option value="3">3 Rooms</option>
+                    <option value="4">4+ Rooms</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-warning btn-lg w-100 rounded-pill fw-bold">
+                    <i class="fas fa-search me-2"></i>Search
+                </button>
+            </div>
+        </form>
     </div>
+</div>
 
-    <!-- Featured Hotels -->
-    <h2 class="mb-4 text-center fw-bold">Featured Hotels & Villas</h2>
+<!-- Featured Hotels -->
+<div class="container mt-5 mb-5">
+    <h2 class="text-center mb-5 fw-bold">Featured Hotels & Villas</h2>
     
     {% if hotels %}
-        <div class="row">
+        <div class="row g-4">
             {% for hotel in hotels %}
-                <div class="col-md-6 col-lg-4 mb-4">
+                <div class="col-md-6 col-lg-4">
                     <div class="card shadow-sm h-100">
                         {% if hotel.main_image %}
                             <img src="{{ hotel.main_image.url }}" class="card-img-top" alt="{{ hotel.name }}" style="height: 250px; object-fit: cover;">
                         {% else %}
-                            <div class="bg-light text-center py-5" style="height: 250px;">
+                            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 250px;">
                                 <i class="fas fa-hotel fa-4x text-muted"></i>
                             </div>
                         {% endif %}
@@ -48,12 +73,5 @@
             <p class="text-muted fs-4">No hotels available yet. Check back soon!</p>
         </div>
     {% endif %}
-
-    <!-- View Count (පහලින්) -->
-    <div class="text-center py-4 bg-light mt-5 rounded">
-        <p class="mb-0 text-muted">
-            <i class="fas fa-eye me-2"></i>Page Views: {{ view_count }}
-        </p>
-    </div>
 </div>
 {% endblock %}

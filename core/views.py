@@ -34,8 +34,24 @@ def register(request):
 # Search hotels
 def search_hotels(request):
     query = request.GET.get('q', '')
-    hotels = Hotel.objects.filter(name__icontains=query) or Hotel.objects.filter(address__icontains=query)
-    return render(request, 'core/search.html', {'hotels': hotels, 'query': query})
+    check_in = request.GET.get('check_in')
+    check_out = request.GET.get('check_out')
+    rooms = request.GET.get('rooms', 1)
+    
+    hotels = Hotel.objects.all()
+    
+    if query:
+        hotels = hotels.filter(
+            Q(name__icontains=query) | 
+            Q(address__icontains=query)
+        )
+    
+    # Future: check_in/out සහ rooms එක්ක availability filter කරන්න (advanced)
+    
+    return render(request, 'core/search.html', {
+        'hotels': hotels,
+        'query': query
+    })
 
 # Hotel detail + calendar
 def hotel_detail(request, hotel_id):
