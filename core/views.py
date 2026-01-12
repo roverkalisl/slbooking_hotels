@@ -116,7 +116,12 @@ def owner_dashboard(request):
         return redirect('home')
     
     hotels = Hotel.objects.filter(owner=request.user)
-    return render(request, 'core/owner_dashboard.html', {'hotels': hotels})
+    pending_bookings = Booking.objects.filter(hotel__owner=request.user, status='pending').count()
+    
+    return render(request, 'core/owner_dashboard.html', {
+        'hotels': hotels,
+        'pending_bookings': pending_bookings
+    })
 
 # Cancel booking
 @login_required
