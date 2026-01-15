@@ -34,4 +34,7 @@ urlpatterns = [
     
     # Commented analytics (optional)
     # path('analytics/', views.analytics_dashboard, name='analytics_dashboard'),
+    path('terms-of-service/', views.terms_of_service, name='terms_of_service'),
+path('refund-policy/', views.refund_policy, name='refund_policy'),
+path('cancellation-policy/', views.cancellation_policy, name='cancellation_policy'),
 ]

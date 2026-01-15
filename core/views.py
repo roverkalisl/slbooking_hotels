@@ -293,3 +293,11 @@ def services(request):
 def ads_txt(request):
     content = "google.com, pub-7289676285085159, DIRECT, f08c47fec0942fa0"
     return HttpResponse(content, content_type="text/plain")
+def terms_of_service(request):
+    return render(request, 'core/terms_of_service.html')
+
+def refund_policy(request):
+    return render(request, 'core/refund_policy.html')
+
+def cancellation_policy(request):
+    return render(request, 'core/cancellation_policy.html')
