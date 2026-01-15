@@ -129,10 +129,60 @@ def owner_dashboard(request):
         'pending_bookings': pending_bookings
     })
 
+# Add hotel
+@login_required
+def add_hotel(request):
+    if request.user.profile.role != 'owner':
+        messages.error(request, 'Access denied.')
+        return redirect('home')
+    if request.method == 'POST':
+        form = HotelForm(request.POST, request.FILES)
+        if form.is_valid():
+            hotel = form.save(commit=False)
+            hotel.owner = request.user
+            hotel.save()
+            form.save_m2m()  # for MultiSelectField
+            messages.success(request, 'Hotel added successfully!')
+            return redirect('owner_dashboard')
+    else:
+        form = HotelForm()
+    return render(request, 'core/add_hotel.html', {'form': form})
+
+# Edit hotel
+@login_required
+def edit_hotel(request, hotel_id):
+    hotel = get_object_or_404(Hotel, id=hotel_id, owner=request.user)
+    if request.method == 'POST':
+        form = HotelForm(request.POST, request.FILES, instance=hotel)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Hotel updated successfully!')
+            return redirect('owner_dashboard')
+    else:
+        form = HotelForm(instance=hotel)
+    return render(request, 'core/edit_hotel.html', {'form': form, 'hotel': hotel})
+
+# Add room
+@login_required
+def add_room(request, hotel_id):
+    hotel = get_object_or_404(Hotel, id=hotel_id, owner=request.user)
+    if request.method == 'POST':
+        form = RoomForm(request.POST, request.FILES)
+        if form.is_valid():
+            room = form.save(commit=False)
+            room.hotel = hotel
+            room.save()
+            messages.success(request, 'Room added successfully!')
+            return redirect('owner_dashboard')
+    else:
+        form = RoomForm()
+    return render(request, 'core/add_room.html', {'form': form, 'hotel': hotel})
+
 # Owner bookings
 @login_required
 def owner_bookings(request):
     if request.user.profile.role != 'owner':
+        messages.error(request, 'Access denied.')
         return redirect('home')
     bookings = Booking.objects.filter(hotel__owner=request.user).order_by('-id')
     return render(request, 'core/owner_bookings.html', {'bookings': bookings})
@@ -206,7 +256,22 @@ def reject_booking(request, booking_id):
     messages.success(request, 'Booking rejected.')
     return redirect('owner_bookings')
 
-# Add hotel, edit hotel, add room, add manual booking (කලින් තියෙන code එක keep කරන්න)
+# Add manual booking
+@login_required
+def add_manual_booking(request, hotel_id):
+    hotel = get_object_or_404(Hotel, id=hotel_id, owner=request.user)
+    if request.method == 'POST':
+        form = ManualBookingForm(request.POST)
+        if form.is_valid():
+            booking = form.save(commit=False)
+            booking.hotel = hotel
+            booking.status = 'confirmed'  # manual එක confirmed විදිහට
+            booking.save()
+            messages.success(request, 'Manual booking added!')
+            return redirect('owner_bookings')
+    else:
+        form = ManualBookingForm()
+    return render(request, 'core/add_manual_booking.html', {'form': form, 'hotel': hotel})
 
 # Static pages
 def about(request):
@@ -224,7 +289,7 @@ def contact(request):
 def services(request):
     return render(request, 'core/services.html')
 
-# ads.txt view
+# ads.txt
 def ads_txt(request):
     content = "google.com, pub-7289676285085159, DIRECT, f08c47fec0942fa0"
     return HttpResponse(content, content_type="text/plain")
