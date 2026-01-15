@@ -1,55 +1,45 @@
 {% extends 'core/base.html' %}
 {% load static %}
 
-{% block title %}Book Entire Villa - {{ hotel.name }}{% endblock %}
+{% block title %}Book Villa - {{ hotel.name }}{% endblock %}
 
 {% block content %}
 <div class="container mt-5 mb-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card shadow-lg border-0 rounded-4">
-                <div class="card-header bg-success text-white text-center py-4 rounded-top-4">
-                    <h2 class="mb-0"><i class="fas fa-home me-3"></i>Book Entire Villa - {{ hotel.name }}</h2>
-                </div>
-                <div class="card-body p-5">
-                    {% if messages %}
-                        {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white text-center py-4">
+            <h3 class="mb-0">
+                <i class="fas fa-home me-3"></i>Book Entire Villa - {{ hotel.name }}
+            </h3>
+        </div>
+        <div class="card-body p-5">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Price per night:</strong> LKR {{ hotel.price_per_night|floatformat:2 }}
+            </div>
 
-                    <div class="alert alert-info mb-4">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Price per night:</strong> LKR {{ hotel.price_per_night|default:"Not set" }}
+            <form action="{% url 'book_villa' hotel.id %}" method="post">
+                {% csrf_token %}
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label for="check_in" class="form-label fw-bold">Check-in Date</label>
+                        <input type="date" name="check_in" id="check_in" class="form-control form-control-lg" required>
                     </div>
-
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Check-in Date</label>
-                            {{ form.check_in }}
-                        </div>
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Check-out Date</label>
-                            {{ form.check_out }}
-                        </div>
-
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-success btn-lg">
-                                <i class="fas fa-calendar-check me-2"></i>Request Booking
-                            </button>
-                        </div>
-                    </form>
-
-                    <div class="text-center mt-4">
-                        <a href="{% url 'hotel_detail' hotel.id %}" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left me-2"></i>Back to Details
-                        </a>
+                    <div class="col-md-6">
+                        <label for="check_out" class="form-label fw-bold">Check-out Date</label>
+                        <input type="date" name="check_out" id="check_out" class="form-control form-control-lg" required>
+                    </div>
+                    <div class="col-12 text-center mt-4">
+                        <button type="submit" class="btn btn-success btn-lg px-5">
+                            <i class="fas fa-calendar-check me-2"></i>Request Booking
+                        </button>
                     </div>
                 </div>
+            </form>
+
+            <div class="text-center mt-4">
+                <a href="{% url 'hotel_detail' hotel.id %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Details
+                </a>
             </div>
         </div>
     </div>
