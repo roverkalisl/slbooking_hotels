@@ -15,62 +15,19 @@
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    
-    <!-- PWA Manifest (optional) -->
-    <!-- <link rel="manifest" href="{% static 'manifest.json' %}"> -->
+
+    <!-- Google tag (gtag.js) - Google Ads Conversion Tracking -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-599245360"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'AW-599245360');
+    </script>
 </head>
 <body>
-
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="{% url 'home' %}">
-                <i class="fas fa-hotel me-2"></i>Hotel Booking
-            </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link" href="{% url 'search_hotels' %}">Search Hotels</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'about' %}">About</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'services' %}">Services</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'privacy_policy' %}">Privacy Policy</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'contact' %}">Contact</a></li>
-                </ul>
-                
-                <ul class="navbar-nav">
-                    {% if user.is_authenticated %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user me-1"></i>Hi, {{ user.username }}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="{% url 'my_bookings' %}"><i class="fas fa-calendar-check me-2"></i>My Bookings</a></li>
-                                {% if user.profile.role == 'owner' %}
-                                    <li><a class="dropdown-item" href="{% url 'owner_dashboard' %}"><i class="fas fa-user-tie me-2"></i>Owner Panel</a></li>
-                                {% endif %}
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <form action="{% url 'logout' %}" method="post" class="d-inline">
-                                        {% csrf_token %}
-                                        <button type="submit" class="dropdown-item text-danger border-0 bg-transparent p-0 m-0 w-100 text-start">
-                                            <i class="fas fa-sign-out-alt me-2"></i>Logout
-                                        </button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </li>
-                    {% else %}
-                        <li class="nav-item"><a class="nav-link" href="{% url 'login' %}"><i class="fas fa-sign-in-alt me-1"></i>Login</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'register' %}"><i class="fas fa-user-plus me-1"></i>Register</a></li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <!-- ... කලින් navbar code එක ... -->
 
     <!-- Messages -->
     {% if messages %}
@@ -89,13 +46,7 @@
     {% endblock %}
 
     <!-- Footer -->
-   <footer class="bg-dark text-white text-center py-4 mt-5">
-    <p class="mb-0">
-        &copy; 2026 SL Booking Hotels. All rights reserved. 
-        | <a href="{% url 'privacy_policy' %}" class="text-white">Privacy Policy</a>
-        | Page Views: {{ total_views }}
-    </p>
-</footer>
+    <!-- ... කලින් footer code එක ... -->
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

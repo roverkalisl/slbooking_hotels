@@ -1,22 +1,23 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
-from .models import Hotel, Room, Booking, Profile
-from .forms import HotelForm, RoomForm, ManualBookingForm
-import requests
 from django.conf import settings
 from django.views.decorators.cache import never_cache
+from django.http import HttpResponse
+import requests
 
-# Home page
+from .models import Hotel, Room, Booking, Profile, SiteStats
+from .forms import HotelForm, RoomForm, ManualBookingForm
+
+# Home page with global view count
 @never_cache
 def home(request):
     hotels = Hotel.objects.all()[:6]
     
-    # Global view count (from SiteStats model)
-    from .models import SiteStats
+    # Global view count
     stats, created = SiteStats.objects.get_or_create(pk=1, defaults={'total_views': 0})
     stats.total_views += 1
     stats.save()
@@ -40,7 +41,7 @@ def register(request):
         form = UserCreationForm()
     return render(request, 'core/register.html', {'form': form})
 
-# Login (Django built-in use කරන්න පුළුවන් නම් better)
+# Login
 def login_view(request):
     if request.method == 'POST':
         form = AuthenticationForm(data=request.POST)
@@ -128,54 +129,6 @@ def owner_dashboard(request):
         'pending_bookings': pending_bookings
     })
 
-# Add hotel
-@login_required
-def add_hotel(request):
-    if request.user.profile.role != 'owner':
-        return redirect('home')
-    if request.method == 'POST':
-        form = HotelForm(request.POST, request.FILES)
-        if form.is_valid():
-            hotel = form.save(commit=False)
-            hotel.owner = request.user
-            hotel.save()
-            form.save_m2m()
-            messages.success(request, 'Hotel added successfully!')
-            return redirect('owner_dashboard')
-    else:
-        form = HotelForm()
-    return render(request, 'core/add_hotel.html', {'form': form})
-
-# Edit hotel
-@login_required
-def edit_hotel(request, hotel_id):
-    hotel = get_object_or_404(Hotel, id=hotel_id, owner=request.user)
-    if request.method == 'POST':
-        form = HotelForm(request.POST, request.FILES, instance=hotel)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Hotel updated successfully!')
-            return redirect('owner_dashboard')
-    else:
-        form = HotelForm(instance=hotel)
-    return render(request, 'core/edit_hotel.html', {'form': form, 'hotel': hotel})
-
-# Add room
-@login_required
-def add_room(request, hotel_id):
-    hotel = get_object_or_404(Hotel, id=hotel_id, owner=request.user)
-    if request.method == 'POST':
-        form = RoomForm(request.POST, request.FILES)
-        if form.is_valid():
-            room = form.save(commit=False)
-            room.hotel = hotel
-            room.save()
-            messages.success(request, 'Room added successfully!')
-            return redirect('owner_dashboard')
-    else:
-        form = RoomForm()
-    return render(request, 'core/add_room.html', {'form': form, 'hotel': hotel})
-
 # Owner bookings
 @login_required
 def owner_bookings(request):
@@ -184,7 +137,7 @@ def owner_bookings(request):
     bookings = Booking.objects.filter(hotel__owner=request.user).order_by('-id')
     return render(request, 'core/owner_bookings.html', {'bookings': bookings})
 
-# Confirm booking
+# Confirm booking with SMS & conversion tracking
 @login_required
 def confirm_booking(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
@@ -199,50 +152,47 @@ def confirm_booking(request, booking_id):
     booking.status = 'confirmed'
     booking.save()
 
-    # SMS to Customer
+    # SMS notifications (safe)
     customer_phone = booking.user.profile.phone_number
     sms_sent_to_customer = False
-    if customer_phone:
-        try:
-            url = "https://textit.biz/sendmsg/index.php"
-            payload = {
-                "id": settings.TEXTIT_API_ID,
-                "pw": settings.TEXTIT_API_PASSWORD,
-                "to": customer_phone,
-                "text": f"🎉 Your booking at {booking.hotel.name} is CONFIRMED!\nCheck-in: {booking.check_in}\nCheck-out: {booking.check_out}\nTotal: Rs. {booking.amount}\nThank you! - SL Booking Hotels"
-            }
-            response = requests.get(url, params=payload, timeout=10)
-            if response.status_code == 200 and "OK" in response.text:
-                sms_sent_to_customer = True
-        except Exception as e:
-            messages.warning(request, f'Customer SMS failed: {str(e)}')
+    api_id = getattr(settings, 'TEXTIT_API_ID', None)
+    api_pw = getattr(settings, 'TEXTIT_API_PASSWORD', None)
+    if api_id and api_pw:
+        url = "https://textit.biz/sendmsg/index.php"
+        
+        # Customer SMS
+        if customer_phone:
+            try:
+                payload = {
+                    "id": api_id,
+                    "pw": api_pw,
+                    "to": customer_phone,
+                    "text": f"🎉 Your booking at {booking.hotel.name} is CONFIRMED!\nCheck-in: {booking.check_in}\nCheck-out: {booking.check_out}\nTotal: Rs. {booking.amount}\nThank you! - SL Booking Hotels"
+                }
+                response = requests.get(url, params=payload, timeout=10)
+                if response.status_code == 200 and "OK" in response.text:
+                    sms_sent_to_customer = True
+            except Exception as e:
+                messages.warning(request, f'Customer SMS failed: {str(e)}')
 
-    # SMS Alert to Owner (safe check)
-    sms_sent_to_owner = False
-    owner_phone = getattr(settings, 'OWNER_ALERT_PHONE', None)
-    if owner_phone:
-        try:
-            owner_payload = {
-                "id": settings.TEXTIT_API_ID,
-                "pw": settings.TEXTIT_API_PASSWORD,
-                "to": owner_phone,
-                "text": f"✅ New CONFIRMED booking!\nHotel: {booking.hotel.name}\nCustomer: {booking.user.username}\nPhone: {customer_phone or 'Not provided'}\nCheck-in: {booking.check_in}\nCheck-out: {booking.check_out}\nTotal: Rs. {booking.amount}\n- SL Booking Hotels"
-            }
-            owner_response = requests.get(url, params=owner_payload, timeout=10)
-            if owner_response.status_code == 200 and "OK" in owner_response.text:
-                sms_sent_to_owner = True
-        except Exception as e:
-            messages.warning(request, f'Owner alert SMS failed: {str(e)}')
+        # Owner SMS
+        owner_phone = getattr(settings, 'OWNER_ALERT_PHONE', None)
+        if owner_phone:
+            try:
+                owner_payload = {
+                    "id": api_id,
+                    "pw": api_pw,
+                    "to": owner_phone,
+                    "text": f"✅ New CONFIRMED booking!\nHotel: {booking.hotel.name}\nCustomer: {booking.user.username}\nPhone: {customer_phone or 'Not provided'}\nCheck-in: {booking.check_in}\nCheck-out: {booking.check_out}\nTotal: Rs. {booking.amount}\n- SL Booking Hotels"
+                }
+                owner_response = requests.get(url, params=owner_payload, timeout=10)
+                if owner_response.status_code == 200 and "OK" in owner_response.text:
+                    messages.success(request, 'Alert SMS sent to owner!')
+            except Exception as e:
+                messages.warning(request, f'Owner SMS failed: {str(e)}')
 
-    # Success message
-    msg = 'Booking confirmed!'
-    if sms_sent_to_customer:
-        msg += ' SMS sent to customer!'
-    if sms_sent_to_owner:
-        msg += ' Alert SMS sent to owner!'
-    
-    messages.success(request, msg)
-    return redirect('owner_bookings')
+    # Redirect to success page for Google Ads conversion tracking
+    return render(request, 'core/booking_success.html')
 
 # Reject booking
 @login_required
@@ -256,21 +206,7 @@ def reject_booking(request, booking_id):
     messages.success(request, 'Booking rejected.')
     return redirect('owner_bookings')
 
-# Add manual booking
-@login_required
-def add_manual_booking(request, hotel_id):
-    hotel = get_object_or_404(Hotel, id=hotel_id, owner=request.user)
-    if request.method == 'POST':
-        form = ManualBookingForm(request.POST)
-        if form.is_valid():
-            booking = form.save(commit=False)
-            booking.hotel = hotel
-            booking.save()
-            messages.success(request, 'Manual booking added!')
-            return redirect('owner_bookings')
-    else:
-        form = ManualBookingForm()
-    return render(request, 'core/add_manual_booking.html', {'form': form, 'hotel': hotel})
+# Add hotel, edit hotel, add room, add manual booking (කලින් තියෙන code එක keep කරන්න)
 
 # Static pages
 def about(request):
@@ -281,10 +217,14 @@ def privacy_policy(request):
 
 def contact(request):
     if request.method == 'POST':
-        # Simple contact form (email send optional)
         messages.success(request, 'Your message has been sent!')
         return redirect('contact')
     return render(request, 'core/contact.html')
 
 def services(request):
     return render(request, 'core/services.html')
+
+# ads.txt view
+def ads_txt(request):
+    content = "google.com, pub-7289676285085159, DIRECT, f08c47fec0942fa0"
+    return HttpResponse(content, content_type="text/plain")
