@@ -1,0 +1,81 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Manager Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <h1 class="text-center mb-5 display-5 fw-bold text-primary">Manager Dashboard - All Bookings</h1>
+
+    <div class="text-center mb-5">
+        <div class="alert alert-info">
+            <i class="fas fa-bell me-2"></i>Pending Bookings: {{ pending_bookings }}
+        </div>
+    </div>
+
+    {% if bookings %}
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Hotel</th>
+                    <th>Customer</th>
+                    <th>Check-in</th>
+                    <th>Check-out</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                    <tr>
+                        <td>{{ booking.id }}</td>
+                        <td>{{ booking.hotel.name }}</td>
+                        <td>{{ booking.user.username }}</td>
+                        <td>{{ booking.check_in }}</td>
+                        <td>{{ booking.check_out }}</td>
+                        <td>Rs. {{ booking.amount }}</td>
+                        <td>
+                            <span class="badge {% if booking.status == 'pending' %}bg-warning{% elif booking.status == 'confirmed' %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ booking.status|capfirst }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if booking.status == 'pending' %}
+                                <a href="{% url 'confirm_booking' booking.id %}" class="btn btn-success btn-sm me-1">Confirm</a>
+                                <a href="{% url 'reject_booking' booking.id %}" class="btn btn-danger btn-sm">Reject</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="text-center py-5">
+            <p class="text-muted fs-4">No bookings yet.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Web Notification Script for pending bookings -->
+<script>
+    if ('Notification' in window && Notification.permission === "default") {
+        Notification.requestPermission();
+    }
+
+    {% if pending_bookings > 0 %}
+        if (Notification.permission === "granted") {
+            new Notification("New Pending Bookings!", {
+                body: "There are {{ pending_bookings }} pending bookings to review across all hotels.",
+                icon: "{% static 'images/logo.png' %}"
+            });
+        }
+    {% endif %}
+
+    // Auto refresh every 30 seconds
+    setInterval(function() {
+        location.reload();
+    }, 30000);
+</script>
+{% endblock %}

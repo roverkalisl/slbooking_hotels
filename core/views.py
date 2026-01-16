@@ -301,3 +301,18 @@ def refund_policy(request):
 
 def cancellation_policy(request):
     return render(request, 'core/cancellation_policy.html')
+@login_required
+def manager_dashboard(request):
+    if request.user.profile.role != 'manager':
+        messages.error(request, 'Access denied. Only managers can view this page.')
+        return redirect('home')
+    
+    # All bookings from all hotels
+    all_bookings = Booking.objects.all().order_by('-id')  # හැම booking එකම බලන්න
+    pending_bookings = all_bookings.filter(status='pending').count()
+    
+    return render(request, 'core/manager_dashboard.html', {
+        'bookings': all_bookings,
+        'pending_bookings': pending_bookings
+    })
+

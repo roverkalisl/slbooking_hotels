@@ -6,6 +6,7 @@ from multiselectfield import MultiSelectField
 ROLE_CHOICES = (
     ('customer', 'Customer'),
     ('owner', 'Owner'),
+    ('manager', 'Manager'),  # මේක add කරන්න
 )
 
 RENTED_TYPE_CHOICES = (

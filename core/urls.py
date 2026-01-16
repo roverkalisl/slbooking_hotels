@@ -37,4 +37,5 @@ urlpatterns = [
     path('terms-of-service/', views.terms_of_service, name='terms_of_service'),
 path('refund-policy/', views.refund_policy, name='refund_policy'),
 path('cancellation-policy/', views.cancellation_policy, name='cancellation_policy'),
+    path('manager/dashboard/', views.manager_dashboard, name='manager_dashboard'),
 ]
