@@ -1,28 +1,54 @@
 {% extends 'core/base.html' %}
 {% load static %}
 
-{% block title %}{{ hotel.name }}{% endblock %}
+{% block title %}{{ hotel.name }} - SL Booking Hotels{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h1 class="mb-4">{{ hotel.name }}</h1>
-    
-    <div class="row">
-        <!-- Images Carousel -->
-        <div class="col-lg-6">
-            <div id="hotelCarousel" class="carousel slide" data-bs-ride="carousel">
+<div class="container mt-4 mb-5">
+    <!-- Hotel Name & Quick Info -->
+    <div class="text-center mb-4">
+        <h1 class="display-5 fw-bold">{{ hotel.name }}</h1>
+        <p class="lead text-muted">
+            <i class="fas fa-map-marker-alt me-2"></i>{{ hotel.address }}
+        </p>
+        <p class="fs-5">
+            <strong>Rented as:</strong> {{ hotel.get_rented_type_display }}
+            {% if hotel.price_per_night %}
+                | <strong>From:</strong> LKR {{ hotel.price_per_night|floatformat:2 }}/night
+            {% endif %}
+        </p>
+    </div>
+
+    <!-- Image Carousel -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto">
+            <div id="hotelCarousel" class="carousel slide shadow-lg rounded" data-bs-ride="carousel">
                 <div class="carousel-inner">
                     {% if hotel.main_image %}
                         <div class="carousel-item active">
-                            <img src="{{ hotel.main_image.url }}" class="d-block w-100" alt="{{ hotel.name }}" style="height: 400px; object-fit: cover;">
+                            <img src="{{ hotel.main_image.url }}" class="d-block w-100 rounded" alt="{{ hotel.name }}" style="height: 500px; object-fit: cover;">
                         </div>
                     {% endif %}
                     {% if hotel.photo1 %}
                         <div class="carousel-item">
-                            <img src="{{ hotel.photo1.url }}" class="d-block w-100" alt="Photo 1" style="height: 400px; object-fit: cover;">
+                            <img src="{{ hotel.photo1.url }}" class="d-block w-100 rounded" alt="Photo 1" style="height: 500px; object-fit: cover;">
                         </div>
                     {% endif %}
-                    <!-- photo2, photo3, photo4 එකතු කරන්න ඕන නම් add කරන්න -->
+                    {% if hotel.photo2 %}
+                        <div class="carousel-item">
+                            <img src="{{ hotel.photo2.url }}" class="d-block w-100 rounded" alt="Photo 2" style="height: 500px; object-fit: cover;">
+                        </div>
+                    {% endif %}
+                    {% if hotel.photo3 %}
+                        <div class="carousel-item">
+                            <img src="{{ hotel.photo3.url }}" class="d-block w-100 rounded" alt="Photo 3" style="height: 500px; object-fit: cover;">
+                        </div>
+                    {% endif %}
+                    {% if hotel.photo4 %}
+                        <div class="carousel-item">
+                            <img src="{{ hotel.photo4.url }}" class="d-block w-100 rounded" alt="Photo 4" style="height: 500px; object-fit: cover;">
+                        </div>
+                    {% endif %}
                 </div>
                 <button class="carousel-control-prev" type="button" data-bs-target="#hotelCarousel" data-bs-slide="prev">
                     <span class="carousel-control-prev-icon" aria-hidden="true"></span>
@@ -34,122 +60,166 @@
                 </button>
             </div>
         </div>
+    </div>
 
-        <!-- Hotel Info & Booking Tabs -->
-        <div class="col-lg-6">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h4 class="card-title">Details</h4>
-                    <p><i class="fas fa-map-marker-alt me-2"></i>{{ hotel.address }}</p>
-                    <p><strong>Rented as:</strong> {{ hotel.get_rented_type_display }}</p>
-                    {% if hotel.price_per_night %}
-                        <p><strong>Price per night:</strong> Rs. {{ hotel.price_per_night }}</p>
-                    {% endif %}
-                    <p>{{ hotel.description }}</p>
-                    
-                    <!-- Facilities -->
+    <!-- Tabs: Description / Booking / Location -->
+    <ul class="nav nav-tabs mb-4" id="hotelTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="description-tab" data-bs-toggle="tab" data-bs-target="#description" type="button" role="tab">
+                Description & Facilities
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="booking-tab" data-bs-toggle="tab" data-bs-target="#booking" type="button" role="tab">
+                Book Now
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="location-tab" data-bs-toggle="tab" data-bs-target="#location" type="button" role="tab">
+                Location
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- Description Tab -->
+        <div class="tab-pane fade show active" id="description" role="tabpanel">
+            <div class="row">
+                <div class="col-lg-8">
+                    <h4>Description</h4>
+                    <p class="lead">{{ hotel.description|linebreaks }}</p>
+
                     {% if hotel.facilities %}
-                        <h5>Facilities</h5>
-                        <ul class="list-inline">
+                        <h5 class="mt-4">Facilities</h5>
+                        <div class="row g-2">
                             {% for facility in hotel.facilities %}
-                                <li class="list-inline-item badge bg-info text-dark me-2">{{ facility }}</li>
+                                <div class="col-auto">
+                                    <span class="badge bg-info text-dark fs-6 px-3 py-2">
+                                        {{ facility }}
+                                    </span>
+                                </div>
                             {% endfor %}
-                        </ul>
+                        </div>
                     {% endif %}
                 </div>
-            </div>
 
-            <!-- Booking Tabs -->
-            <div class="mt-4">
-                <ul class="nav nav-tabs" id="bookingTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="book-tab" data-bs-toggle="tab" data-bs-target="#book" type="button" role="tab" aria-controls="book" aria-selected="true">
-                            Book Now
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab" aria-controls="info" aria-selected="false">
-                            More Info
-                        </button>
-                    </li>
-                </ul>
-                
-                <div class="tab-content mt-3" id="bookingTabContent">
-                    <!-- Book Tab -->
-                    <div class="tab-pane fade show active" id="book" role="tabpanel" aria-labelledby="book-tab">
-                        {% if hotel.rented_type == 'full' %}
-                            <!-- Entire Villa Booking -->
-                            <form action="{% url 'book_villa' hotel.id %}" method="post">
-                                {% csrf_token %}
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Check-in Date</label>
-                                        <input type="date" name="check_in" class="form-control" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Check-out Date</label>
-                                        <input type="date" name="check_out" class="form-control" required>
-                                    </div>
-                                    <div class="col-12">
-                                        <button type="submit" class="btn btn-success btn-lg w-100">
-                                            <i class="fas fa-calendar-check me-2"></i>Book Entire Villa
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        {% else %}
-                            <!-- Room Booking (if rooms exist) -->
-                            {% if hotel.rooms.all %}
-                                <h5>Select Room</h5>
-                                {% for room in hotel.rooms.all %}
-                                    <div class="card mb-3">
-                                        <div class="card-body">
-                                            <h6>{{ room.room_type }} - Rs. {{ room.price_per_night }}/night</h6>
-                                            <form action="{% url 'book_room' room.id %}" method="post">
-                                                {% csrf_token %}
-                                                <div class="row g-3">
-                                                    <div class="col-md-6">
-                                                        <input type="date" name="check_in" class="form-control" required>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <input type="date" name="check_out" class="form-control" required>
-                                                    </div>
-                                                    <div class="col-12">
-                                                        <button type="submit" class="btn btn-primary">
-                                                            Book This Room
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            {% else %}
-                                <p class="text-muted">No rooms available for booking. Contact owner.</p>
-                            {% endif %}
-                        {% endif %}
-                    </div>
-
-                    <!-- More Info Tab -->
-                    <div class="tab-pane fade" id="info" role="tabpanel" aria-labelledby="info-tab">
-                        <h5>Location</h5>
-                        {% if hotel.google_location_link %}
-                            <iframe src="{{ hotel.google_location_link }}" width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
-                        {% else %}
-                            <p>No map available.</p>
-                        {% endif %}
-                        
-                        <h5 class="mt-4">Contact</h5>
-                        <p><i class="fas fa-phone me-2"></i>{{ hotel.owner.profile.phone_number|default:"Contact via form" }}</p>
-                        {% if hotel.facebook_page %}
-                            <a href="{{ hotel.facebook_page }}" target="_blank" class="btn btn-primary">
-                                <i class="fab fa-facebook me-2"></i>Facebook Page
-                            </a>
-                        {% endif %}
+                <div class="col-lg-4">
+                    <div class="card shadow-sm sticky-top" style="top: 20px;">
+                        <div class="card-body">
+                            <h5>Quick Info</h5>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item"><strong>Address:</strong> {{ hotel.address }}</li>
+                                {% if hotel.price_per_night %}
+                                    <li class="list-group-item"><strong>Price per night:</strong> LKR {{ hotel.price_per_night|floatformat:2 }}</li>
+                                {% endif %}
+                                <li class="list-group-item"><strong>Rented as:</strong> {{ hotel.get_rented_type_display }}</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Booking Tab -->
+        <div class="tab-pane fade" id="booking" role="tabpanel">
+            {% if hotel.rented_type == 'full' %}
+                <!-- Entire Villa Booking -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Book Entire Villa</h5>
+                    </div>
+                    <div class="card-body">
+                        <form action="{% url 'book_villa' hotel.id %}" method="post">
+                            {% csrf_token %}
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Check-in Date</label>
+                                    <input type="date" name="check_in" class="form-control form-control-lg" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Check-out Date</label>
+                                    <input type="date" name="check_out" class="form-control form-control-lg" required>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-success btn-lg w-100">
+                                        <i class="fas fa-calendar-check me-2"></i>Request Booking
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <!-- Room Booking -->
+                <h4>Select Room</h4>
+                {% if hotel.rooms.all %}
+                    {% for room in hotel.rooms.all %}
+                        <div class="card mb-3 shadow-sm">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        {% if room.image %}
+                                            <img src="{{ room.image.url }}" class="img-fluid rounded" alt="{{ room.room_type }}">
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-8">
+                                        <h5>{{ room.room_type }} - {{ room.ac_type }}</h5>
+                                        <p class="text-success fw-bold">LKR {{ room.price_per_night }}/night</p>
+                                        <form action="{% url 'book_room' room.id %}" method="post">
+                                            {% csrf_token %}
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <input type="date" name="check_in" class="form-control" required>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <input type="date" name="check_out" class="form-control" required>
+                                                </div>
+                                                <div class="col-12">
+                                                    <button type="submit" class="btn btn-primary">
+                                                        Book This Room
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="alert alert-warning">
+                        No rooms available for booking. Please contact the owner.
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        <!-- Location Tab -->
+        <div class="tab-pane fade" id="location" role="tabpanel">
+            <h4>Location</h4>
+            {% if hotel.google_location_link %}
+                <iframe 
+                    src="{{ hotel.google_location_link }}" 
+                    width="100%" 
+                    height="450" 
+                    style="border:0;" 
+                    allowfullscreen="" 
+                    loading="lazy" 
+                    referrerpolicy="no-referrer-when-downgrade">
+                </iframe>
+            {% else %}
+                <div class="alert alert-info">
+                    No map available. Please contact the owner for directions.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Back Button -->
+    <div class="text-center mt-5">
+        <a href="{% url 'home' %}" class="btn btn-outline-primary btn-lg px-5">
+            <i class="fas fa-arrow-left me-2"></i>Back to Home
+        </a>
     </div>
 </div>
 {% endblock %}
