@@ -15,6 +15,15 @@
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <!-- Google tag (gtag.js) - Google Ads Conversion Tracking -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-599245360"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'AW-599245360');
+    </script>
 </head>
 <body>
     <!-- Navbar -->
@@ -34,6 +43,9 @@
                     <li class="nav-item"><a class="nav-link" href="{% url 'about' %}">About</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'services' %}">Services</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'privacy_policy' %}">Privacy Policy</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'terms_of_service' %}">Terms of Service</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'refund_policy' %}">Refund Policy</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'cancellation_policy' %}">Cancellation Policy</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'contact' %}">Contact</a></li>
                 </ul>
                 
@@ -47,6 +59,9 @@
                                 <li><a class="dropdown-item" href="{% url 'my_bookings' %}"><i class="fas fa-calendar-check me-2"></i>My Bookings</a></li>
                                 {% if user.profile.role == 'owner' %}
                                     <li><a class="dropdown-item" href="{% url 'owner_dashboard' %}"><i class="fas fa-user-tie me-2"></i>Owner Panel</a></li>
+                                {% endif %}
+                                {% if user.profile.role == 'manager' %}
+                                    <li><a class="dropdown-item" href="{% url 'manager_dashboard' %}"><i class="fas fa-tachometer-alt me-2"></i>Manager Dashboard</a></li>
                                 {% endif %}
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
@@ -87,17 +102,16 @@
     <!-- Footer -->
     <footer class="bg-dark text-white text-center py-4 mt-5">
         <p class="mb-0">
-            © 2026 SL Booking Hotels. All rights reserved. 
+            &copy; 2026 SL Booking Hotels. All rights reserved. 
             | <a href="{% url 'privacy_policy' %}" class="text-white">Privacy Policy</a>
-	| <a href="{% url 'privacy_policy' %}" class="text-white">Privacy Policy</a>
-        | <a href="{% url 'terms_of_service' %}" class="text-white">Terms of Service</a>
-        | <a href="{% url 'refund_policy' %}" class="text-white">Refund Policy</a>
-        | <a href="{% url 'cancellation_policy' %}" class="text-white">Cancellation Policy</a>
+            | <a href="{% url 'terms_of_service' %}" class="text-white">Terms of Service</a>
+            | <a href="{% url 'refund_policy' %}" class="text-white">Refund Policy</a>
+            | <a href="{% url 'cancellation_policy' %}" class="text-white">Cancellation Policy</a>
             | Page Views: {{ total_views|default:0 }}
         </p>
     </footer>
 
-    <!-- Bootstrap JS (dropdown සහ mobile toggle work වෙන්න මේක ඕනේ) -->
+    <!-- Bootstrap JS (dropdown, mobile menu, carousel වගේ features work වෙන්න ඕනේ) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
 </html>

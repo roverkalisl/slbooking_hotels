@@ -106,9 +106,13 @@ DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # Cloudinary config
 CLOUDINARY_STORAGE = {
+    #'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME', default='dmokxu46m'),
+    #'API_KEY': config('CLOUDINARY_API_KEY', default='7764447697492844'),
+    #'API_SECRET': config('CLOUDINARY_API_SECRET', default='hvaFnrPgXouI0QB6jrmpvF1DMrM'), 
+
     'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': config('CLOUDINARY_API_KEY'),
-    'API_SECRET': config('CLOUDINARY_API_SECRET'),
+   'API_SECRET': config('CLOUDINARY_API_SECRET'),
 }
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
