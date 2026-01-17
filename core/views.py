@@ -191,70 +191,35 @@ def owner_bookings(request):
 @login_required
 def confirm_booking(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
-    if request.user != booking.hotel.owner:
+    # Owner or Manager can confirm
+    if request.user != booking.hotel.owner and request.user.profile.role != 'manager':
         messages.error(request, 'Access denied.')
         return redirect('owner_bookings')
     
-    # Calculate amount
+    # Calculate amount and confirm (කලින් code එක keep කරන්න)
     nights = (booking.check_out - booking.check_in).days
     price = booking.room.price_per_night if booking.room else booking.hotel.price_per_night
     booking.amount = price * nights
     booking.status = 'confirmed'
     booking.save()
 
-    # SMS notifications (safe)
-    customer_phone = booking.user.profile.phone_number
-    sms_sent_to_customer = False
-    api_id = getattr(settings, 'TEXTIT_API_ID', None)
-    api_pw = getattr(settings, 'TEXTIT_API_PASSWORD', None)
-    if api_id and api_pw:
-        url = "https://textit.biz/sendmsg/index.php"
-        
-        # Customer SMS
-        if customer_phone:
-            try:
-                payload = {
-                    "id": api_id,
-                    "pw": api_pw,
-                    "to": customer_phone,
-                    "text": f"🎉 Your booking at {booking.hotel.name} is CONFIRMED!\nCheck-in: {booking.check_in}\nCheck-out: {booking.check_out}\nTotal: Rs. {booking.amount}\nThank you! - SL Booking Hotels"
-                }
-                response = requests.get(url, params=payload, timeout=10)
-                if response.status_code == 200 and "OK" in response.text:
-                    sms_sent_to_customer = True
-            except Exception as e:
-                messages.warning(request, f'Customer SMS failed: {str(e)}')
+    # SMS code එක කලින් තියෙනවා නම් keep කරන්න
 
-        # Owner SMS
-        owner_phone = getattr(settings, 'OWNER_ALERT_PHONE', None)
-        if owner_phone:
-            try:
-                owner_payload = {
-                    "id": api_id,
-                    "pw": api_pw,
-                    "to": owner_phone,
-                    "text": f"✅ New CONFIRMED booking!\nHotel: {booking.hotel.name}\nCustomer: {booking.user.username}\nPhone: {customer_phone or 'Not provided'}\nCheck-in: {booking.check_in}\nCheck-out: {booking.check_out}\nTotal: Rs. {booking.amount}\n- SL Booking Hotels"
-                }
-                owner_response = requests.get(url, params=owner_payload, timeout=10)
-                if owner_response.status_code == 200 and "OK" in owner_response.text:
-                    messages.success(request, 'Alert SMS sent to owner!')
-            except Exception as e:
-                messages.warning(request, f'Owner SMS failed: {str(e)}')
+    messages.success(request, 'Booking confirmed successfully!')
+    return render(request, 'core/booking_success.html')  # or redirect('manager_dashboard')
 
-    # Redirect to success page for Google Ads conversion tracking
-    return render(request, 'core/booking_success.html')
-
-# Reject booking
 @login_required
 def reject_booking(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
-    if request.user != booking.hotel.owner:
+    # Owner or Manager can reject
+    if request.user != booking.hotel.owner and request.user.profile.role != 'manager':
         messages.error(request, 'Access denied.')
         return redirect('owner_bookings')
+    
     booking.status = 'cancelled'
     booking.save()
     messages.success(request, 'Booking rejected.')
-    return redirect('owner_bookings')
+    return redirect('manager_dashboard')  # manager එකට redirect කරන්න
 
 # Add manual booking
 @login_required
