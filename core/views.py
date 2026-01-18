@@ -33,12 +33,18 @@ def register(request):
         form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            Profile.objects.create(user=user, role='customer')
+            # Profile create කරන්න
+            role = request.POST.get('role', 'customer')  # form එකේ role select එකෙන් ගන්න
+            Profile.objects.create(user=user, role=role)
             login(request, user)
-            messages.success(request, 'Registration successful!')
+            messages.success(request, 'Registration successful! Welcome to SL Booking Hotels.')
             return redirect('home')
+        else:
+            # Form invalid නම් errors show කරන්න
+            messages.error(request, 'Registration failed. Please check the form.')
     else:
         form = UserCreationForm()
+    
     return render(request, 'core/register.html', {'form': form})
 
 # Login

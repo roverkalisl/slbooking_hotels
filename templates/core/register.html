@@ -1,65 +1,41 @@
-{% extends 'core/base.html' %}
-{% load static %}
-
-{% block title %}Register{% endblock %}
-
-{% block content %}
-<div class="container mt-5 mb-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            <div class="card shadow-lg border-0">
-                <div class="card-header bg-primary text-white text-center py-4">
-                    <h3 class="mb-0">Create an Account</h3>
-                </div>
-                <div class="card-body p-5">
-                    <form method="post">
-                        {% csrf_token %}
-
-                        <div class="mb-4">
-                            <label for="id_username" class="form-label fw-bold">Username</label>
-                            <input type="text" name="username" id="id_username" class="form-control form-control-lg" placeholder="Choose a username" required autofocus>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="id_email" class="form-label fw-bold">Email Address</label>
-                            <input type="email" name="email" id="id_email" class="form-control form-control-lg" placeholder="your@email.com" required>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="id_phone_number" class="form-label fw-bold">Phone Number (optional for WhatsApp)</label>
-                            <input type="text" name="phone_number" id="id_phone_number" class="form-control form-control-lg" placeholder="+947XXXXXXXX">
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">I am a</label>
-                            <select name="role" class="form-select form-select-lg" required>
-                                <option value="" disabled selected>Select your role</option>
-                                <option value="customer">Customer (Book hotels & villas)</option>
-                                <option value="owner">Hotel/Villa Owner</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="id_password1" class="form-label fw-bold">Password</label>
-                            <input type="password" name="password1" id="id_password1" class="form-control form-control-lg" placeholder="Create a strong password" required>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="id_password2" class="form-label fw-bold">Confirm Password</label>
-                            <input type="password" name="password2" id="id_password2" class="form-control form-control-lg" placeholder="Confirm your password" required>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary btn-lg w-100">
-                            Register
-                        </button>
-                    </form>
-
-                    <div class="text-center mt-4">
-                        <p>Already have an account? <a href="{% url 'login' %}" class="text-primary fw-bold">Login here</a></p>
-                    </div>
-                </div>
-            </div>
-        </div>
+<form method="post">
+    {% csrf_token %}
+    
+    <div class="mb-4">
+        <label class="form-label fw-bold">Username</label>
+        {{ form.username }}
     </div>
-</div>
-{% endblock %}
+
+    <div class="mb-4">
+        <label class="form-label fw-bold">Email Address</label>
+        {{ form.email }}
+    </div>
+
+    <div class="mb-4">
+        <label class="form-label fw-bold">Phone Number (optional for WhatsApp)</label>
+        <input type="text" name="phone_number" class="form-control form-control-lg" placeholder="+947XXXXXXXX">
+    </div>
+
+    <div class="mb-4">
+        <label class="form-label fw-bold">I am a</label>
+        <select name="role" class="form-select form-select-lg" required>
+            <option value="" disabled selected>Select your role</option>
+            <option value="customer">Customer (Book hotels & villas)</option>
+            <option value="owner">Hotel/Villa Owner</option>
+        </select>
+    </div>
+
+    <div class="mb-4">
+        <label class="form-label fw-bold">Password</label>
+        {{ form.password1 }}
+    </div>
+
+    <div class="mb-4">
+        <label class="form-label fw-bold">Confirm Password</label>
+        {{ form.password2 }}
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-lg w-100">
+        Register
+    </button>
+</form>
