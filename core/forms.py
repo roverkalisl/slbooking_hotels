@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from .models import Hotel, Room, Booking, Profile
+from .models import Profile, ROLE_CHOICES  # මේක add කරන්න
 
 # Custom Registration Form (email, phone, role එක්ක)
 class CustomUserCreationForm(UserCreationForm):
