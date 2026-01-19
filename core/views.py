@@ -10,9 +10,14 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import requests
 import hashlib
-
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .models import Booking, Hotel
+from .serializers import BookingSerializer, HotelSerializer  # serializers.py එක තියෙනවා නම්
 from .models import Hotel, Room, Booking, Profile, SiteStats
 from .forms import HotelForm, RoomForm, ManualBookingForm, CustomUserCreationForm
+
 
 # Home page with global view count
 @never_cache
@@ -186,6 +191,97 @@ def reject_booking(request, booking_id):
     messages.success(request, 'Booking rejected.')
     return redirect('manager_dashboard' if request.user.profile.role == 'manager' else 'owner_bookings')
 
+# Add hotel
+@login_required
+def add_hotel(request):
+    if not hasattr(request.user, 'profile') or request.user.profile.role != 'owner':
+        messages.error(request, 'Access denied. Only owners can add hotels.')
+        return redirect('home')
+    if request.method == 'POST':
+        form = HotelForm(request.POST, request.FILES)
+        if form.is_valid():
+            hotel = form.save(commit=False)
+            hotel.owner = request.user
+            hotel.save()
+            form.save_m2m()  # for facilities MultiSelectField
+            messages.success(request, 'Hotel added successfully!')
+            return redirect('owner_dashboard')
+    else:
+        form = HotelForm()
+    return render(request, 'core/add_hotel.html', {'form': form})
+
+# Edit hotel
+@login_required
+def edit_hotel(request, hotel_id):
+    hotel = get_object_or_404(Hotel, id=hotel_id, owner=request.user)
+    if request.method == 'POST':
+        form = HotelForm(request.POST, request.FILES, instance=hotel)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Hotel updated successfully!')
+            return redirect('owner_dashboard')
+    else:
+        form = HotelForm(instance=hotel)
+    return render(request, 'core/edit_hotel.html', {'form': form, 'hotel': hotel})
+
+# Add room
+@login_required
+def add_room(request, hotel_id):
+    hotel = get_object_or_404(Hotel, id=hotel_id, owner=request.user)
+    if request.method == 'POST':
+        form = RoomForm(request.POST, request.FILES)
+        if form.is_valid():
+            room = form.save(commit=False)
+            room.hotel = hotel
+            room.save()
+            messages.success(request, 'Room added successfully!')
+            return redirect('owner_dashboard')
+    else:
+        form = RoomForm()
+    return render(request, 'core/add_room.html', {'form': form, 'hotel': hotel})
+
+# Add manual booking
+@login_required
+def add_manual_booking(request, hotel_id):
+    hotel = get_object_or_404(Hotel, id=hotel_id, owner=request.user)
+    if request.method == 'POST':
+        form = ManualBookingForm(request.POST)
+        if form.is_valid():
+            booking = form.save(commit=False)
+            booking.hotel = hotel
+            booking.status = 'confirmed'  # manual එක auto confirm
+            booking.save()
+            messages.success(request, 'Manual booking added successfully!')
+            return redirect('owner_bookings')
+    else:
+        form = ManualBookingForm()
+    return render(request, 'core/add_manual_booking.html', {'form': form, 'hotel': hotel})
+    
+    # Static pages
+def about(request):
+    return render(request, 'core/about.html')
+
+def services(request):
+    return render(request, 'core/services.html')
+
+def privacy_policy(request):
+    return render(request, 'core/privacy_policy.html')
+
+def terms_of_service(request):
+    return render(request, 'core/terms_of_service.html')
+
+def refund_policy(request):
+    return render(request, 'core/refund_policy.html')
+
+def cancellation_policy(request):
+    return render(request, 'core/cancellation_policy.html')
+
+def contact(request):
+    if request.method == 'POST':
+        # Simple contact form (later email send add කරන්න පුළුවන්)
+        messages.success(request, 'Your message has been sent! We will contact you soon.')
+        return redirect('contact')
+    return render(request, 'core/contact.html')
 # Add hotel, edit hotel, add room, add manual booking (කලින් තියෙන code එක keep කරන්න)
 
 # Static pages (about, privacy_policy, terms_of_service, refund_policy, cancellation_policy, contact, services)
@@ -194,3 +290,20 @@ def reject_booking(request, booking_id):
 def ads_txt(request):
     content = "google.com, pub-7289676285085159, DIRECT, f08c47fec0942fa0"
     return HttpResponse(content, content_type="text/plain")
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def owner_bookings_api(request):
+    if request.user.profile.role != 'owner':
+        return Response({"error": "Access denied"}, status=403)
+    bookings = Booking.objects.filter(hotel__owner=request.user)
+    serializer = BookingSerializer(bookings, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def owner_hotels_api(request):
+    if request.user.profile.role != 'owner':
+        return Response({"error": "Access denied"}, status=403)
+    hotels = Hotel.objects.filter(owner=request.user)
+    serializer = HotelSerializer(hotels, many=True)
+    return Response(serializer.data)

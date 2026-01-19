@@ -11,3 +11,4 @@ twilio
 django-multiselectfield==1.0.1
 python-decouple
 twilio>=7.0.0
+djangorestframework

@@ -7,19 +7,19 @@
 <div class="container mt-5 mb-5">
     <div class="row justify-content-center">
         <div class="col-md-6 col-lg-5">
-            <div class="card shadow-lg border-0">
-                <div class="card-header bg-primary text-white text-center py-4">
-                    <h3 class="mb-0">Create an Account</h3>
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-primary text-white text-center py-4 rounded-top">
+                    <h3 class="mb-0 fw-bold">Create an Account</h3>
                 </div>
                 <div class="card-body p-5">
-                    <!-- Form Errors -->
+                    <!-- Errors Show කරන්න -->
                     {% if form.errors %}
-                        <div class="alert alert-danger">
-                            <strong>Registration failed. Please correct the errors below:</strong>
+                        <div class="alert alert-danger rounded mb-4">
+                            <strong>Please fix the following errors:</strong>
                             <ul class="mb-0 mt-2">
                                 {% for field in form %}
                                     {% for error in field.errors %}
-                                        <li>{{ field.label }}: {{ error }}</li>
+                                        <li><strong>{{ field.label }}:</strong> {{ error }}</li>
                                     {% endfor %}
                                 {% endfor %}
                                 {% for error in form.non_field_errors %}
@@ -33,45 +33,42 @@
                         {% csrf_token %}
 
                         <div class="mb-4">
-                            {{ form.username.label_tag }}
+                            <label class="form-label fw-bold">Username</label>
                             {{ form.username }}
-                            {% if form.username.help_text %}
-                                <small class="text-muted">{{ form.username.help_text }}</small>
-                            {% endif %}
                         </div>
 
                         <div class="mb-4">
-                            {{ form.email.label_tag }}
+                            <label class="form-label fw-bold">Email Address</label>
                             {{ form.email }}
                         </div>
 
                         <div class="mb-4">
-                            {{ form.phone_number.label_tag }}
+                            <label class="form-label fw-bold">Phone Number (optional for WhatsApp)</label>
                             {{ form.phone_number }}
                         </div>
 
                         <div class="mb-4">
-                            {{ form.role.label_tag }}
+                            <label class="form-label fw-bold">I am a</label>
                             {{ form.role }}
                         </div>
 
                         <div class="mb-4">
-                            {{ form.password1.label_tag }}
+                            <label class="form-label fw-bold">Password</label>
                             {{ form.password1 }}
                         </div>
 
                         <div class="mb-4">
-                            {{ form.password2.label_tag }}
+                            <label class="form-label fw-bold">Confirm Password</label>
                             {{ form.password2 }}
                         </div>
 
-                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow">
                             Register
                         </button>
                     </form>
 
                     <div class="text-center mt-4">
-                        <p>Already have an account? <a href="{% url 'login' %}" class="text-primary fw-bold">Login here</a></p>
+                        <p class="text-muted">Already have an account? <a href="{% url 'login' %}" class="text-primary fw-bold">Login here</a></p>
                     </div>
                 </div>
             </div>
