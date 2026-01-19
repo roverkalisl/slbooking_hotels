@@ -4,58 +4,75 @@
 {% block title %}Register{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container mt-5 mb-5">
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h3 class="mb-0">Create an Account</h3>
+                </div>
                 <div class="card-body p-5">
-                    <h3 class="text-center mb-4 fw-bold">Create an Account</h3>
-                    
+                    <!-- Form Errors -->
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <strong>Registration failed. Please correct the errors below:</strong>
+                            <ul class="mb-0 mt-2">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <li>{{ field.label }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
                     <form method="post">
                         {% csrf_token %}
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Username</label>
+
+                        <div class="mb-4">
+                            {{ form.username.label_tag }}
                             {{ form.username }}
+                            {% if form.username.help_text %}
+                                <small class="text-muted">{{ form.username.help_text }}</small>
+                            {% endif %}
                         </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Email Address</label>
+
+                        <div class="mb-4">
+                            {{ form.email.label_tag }}
                             {{ form.email }}
                         </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Phone Number (optional for WhatsApp)</label>
+
+                        <div class="mb-4">
+                            {{ form.phone_number.label_tag }}
                             {{ form.phone_number }}
                         </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">I am a</label>
+
+                        <div class="mb-4">
+                            {{ form.role.label_tag }}
                             {{ form.role }}
                         </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Password</label>
+
+                        <div class="mb-4">
+                            {{ form.password1.label_tag }}
                             {{ form.password1 }}
                         </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Confirm Password</label>
+
+                        <div class="mb-4">
+                            {{ form.password2.label_tag }}
                             {{ form.password2 }}
                         </div>
-                        
-                        {% if form.errors %}
-                            <div class="alert alert-danger mb-3">
-                                {{ form.errors }}
-                            </div>
-                        {% endif %}
-                        
-                        <button type="submit" class="btn btn-primary w-100 py-2">Register</button>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            Register
+                        </button>
                     </form>
-                    
-                    <p class="text-center mt-4">
-                        Already have an account? <a href="{% url 'login' %}">Login here</a>
-                    </p>
+
+                    <div class="text-center mt-4">
+                        <p>Already have an account? <a href="{% url 'login' %}" class="text-primary fw-bold">Login here</a></p>
+                    </div>
                 </div>
             </div>
         </div>

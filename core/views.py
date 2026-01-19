@@ -1,16 +1,18 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, authenticate
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth import login
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
 from django.conf import settings
 from django.views.decorators.cache import never_cache
 from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 import requests
+import hashlib
 
 from .models import Hotel, Room, Booking, Profile, SiteStats
-from .forms import HotelForm, RoomForm, ManualBookingForm
+from .forms import HotelForm, RoomForm, ManualBookingForm, CustomUserCreationForm
 
 # Home page with global view count
 @never_cache
@@ -27,23 +29,17 @@ def home(request):
         'total_views': stats.total_views
     })
 
-# Register
+# Register with custom form
 def register(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            # Profile create කරන්න
-            role = request.POST.get('role', 'customer')  # form එකේ role select එකෙන් ගන්න
-            Profile.objects.create(user=user, role=role)
             login(request, user)
             messages.success(request, 'Registration successful! Welcome to SL Booking Hotels.')
             return redirect('home')
-        else:
-            # Form invalid නම් errors show කරන්න
-            messages.error(request, 'Registration failed. Please check the form.')
     else:
-        form = UserCreationForm()
+        form = CustomUserCreationForm()
     
     return render(request, 'core/register.html', {'form': form})
 
@@ -125,7 +121,7 @@ def cancel_booking(request, booking_id):
 # Owner dashboard
 @login_required
 def owner_dashboard(request):
-    if request.user.profile.role != 'owner':
+    if not hasattr(request.user, 'profile') or request.user.profile.role != 'owner':
         messages.error(request, 'Access denied.')
         return redirect('home')
     hotels = Hotel.objects.filter(owner=request.user)
@@ -135,151 +131,14 @@ def owner_dashboard(request):
         'pending_bookings': pending_bookings
     })
 
-# Add hotel
-@login_required
-def add_hotel(request):
-    if request.user.profile.role != 'owner':
-        messages.error(request, 'Access denied.')
-        return redirect('home')
-    if request.method == 'POST':
-        form = HotelForm(request.POST, request.FILES)
-        if form.is_valid():
-            hotel = form.save(commit=False)
-            hotel.owner = request.user
-            hotel.save()
-            form.save_m2m()  # for MultiSelectField
-            messages.success(request, 'Hotel added successfully!')
-            return redirect('owner_dashboard')
-    else:
-        form = HotelForm()
-    return render(request, 'core/add_hotel.html', {'form': form})
-
-# Edit hotel
-@login_required
-def edit_hotel(request, hotel_id):
-    hotel = get_object_or_404(Hotel, id=hotel_id, owner=request.user)
-    if request.method == 'POST':
-        form = HotelForm(request.POST, request.FILES, instance=hotel)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Hotel updated successfully!')
-            return redirect('owner_dashboard')
-    else:
-        form = HotelForm(instance=hotel)
-    return render(request, 'core/edit_hotel.html', {'form': form, 'hotel': hotel})
-
-# Add room
-@login_required
-def add_room(request, hotel_id):
-    hotel = get_object_or_404(Hotel, id=hotel_id, owner=request.user)
-    if request.method == 'POST':
-        form = RoomForm(request.POST, request.FILES)
-        if form.is_valid():
-            room = form.save(commit=False)
-            room.hotel = hotel
-            room.save()
-            messages.success(request, 'Room added successfully!')
-            return redirect('owner_dashboard')
-    else:
-        form = RoomForm()
-    return render(request, 'core/add_room.html', {'form': form, 'hotel': hotel})
-
-# Owner bookings
-@login_required
-def owner_bookings(request):
-    if request.user.profile.role != 'owner':
-        messages.error(request, 'Access denied.')
-        return redirect('home')
-    bookings = Booking.objects.filter(hotel__owner=request.user).order_by('-id')
-    return render(request, 'core/owner_bookings.html', {'bookings': bookings})
-
-# Confirm booking with SMS & conversion tracking
-@login_required
-def confirm_booking(request, booking_id):
-    booking = get_object_or_404(Booking, id=booking_id)
-    # Owner or Manager can confirm
-    if request.user != booking.hotel.owner and request.user.profile.role != 'manager':
-        messages.error(request, 'Access denied.')
-        return redirect('owner_bookings')
-    
-    # Calculate amount and confirm (කලින් code එක keep කරන්න)
-    nights = (booking.check_out - booking.check_in).days
-    price = booking.room.price_per_night if booking.room else booking.hotel.price_per_night
-    booking.amount = price * nights
-    booking.status = 'confirmed'
-    booking.save()
-
-    # SMS code එක කලින් තියෙනවා නම් keep කරන්න
-
-    messages.success(request, 'Booking confirmed successfully!')
-    return render(request, 'core/booking_success.html')  # or redirect('manager_dashboard')
-
-@login_required
-def reject_booking(request, booking_id):
-    booking = get_object_or_404(Booking, id=booking_id)
-    # Owner or Manager can reject
-    if request.user != booking.hotel.owner and request.user.profile.role != 'manager':
-        messages.error(request, 'Access denied.')
-        return redirect('owner_bookings')
-    
-    booking.status = 'cancelled'
-    booking.save()
-    messages.success(request, 'Booking rejected.')
-    return redirect('manager_dashboard')  # manager එකට redirect කරන්න
-
-# Add manual booking
-@login_required
-def add_manual_booking(request, hotel_id):
-    hotel = get_object_or_404(Hotel, id=hotel_id, owner=request.user)
-    if request.method == 'POST':
-        form = ManualBookingForm(request.POST)
-        if form.is_valid():
-            booking = form.save(commit=False)
-            booking.hotel = hotel
-            booking.status = 'confirmed'  # manual එක confirmed විදිහට
-            booking.save()
-            messages.success(request, 'Manual booking added!')
-            return redirect('owner_bookings')
-    else:
-        form = ManualBookingForm()
-    return render(request, 'core/add_manual_booking.html', {'form': form, 'hotel': hotel})
-
-# Static pages
-def about(request):
-    return render(request, 'core/about.html')
-
-def privacy_policy(request):
-    return render(request, 'core/privacy_policy.html')
-
-def contact(request):
-    if request.method == 'POST':
-        messages.success(request, 'Your message has been sent!')
-        return redirect('contact')
-    return render(request, 'core/contact.html')
-
-def services(request):
-    return render(request, 'core/services.html')
-
-# ads.txt
-def ads_txt(request):
-    content = "google.com, pub-7289676285085159, DIRECT, f08c47fec0942fa0"
-    return HttpResponse(content, content_type="text/plain")
-def terms_of_service(request):
-    return render(request, 'core/terms_of_service.html')
-
-def refund_policy(request):
-    return render(request, 'core/refund_policy.html')
-
-def cancellation_policy(request):
-    return render(request, 'core/cancellation_policy.html')
+# Manager dashboard
 @login_required
 def manager_dashboard(request):
-    if request.user.profile.role != 'manager':
+    if not hasattr(request.user, 'profile') or request.user.profile.role != 'manager':
         messages.error(request, 'Access denied. Only managers can view this page.')
         return redirect('home')
     
-    # All bookings from all hotels
-    all_bookings = Booking.objects.all().order_by('-id')  # හැම booking එකම බලන්න
+    all_bookings = Booking.objects.all().order_by('-id')
     pending_bookings = all_bookings.filter(status='pending').count()
     
     return render(request, 'core/manager_dashboard.html', {
@@ -287,3 +146,51 @@ def manager_dashboard(request):
         'pending_bookings': pending_bookings
     })
 
+# Owner bookings
+@login_required
+def owner_bookings(request):
+    if not hasattr(request.user, 'profile') or request.user.profile.role != 'owner':
+        messages.error(request, 'Access denied.')
+        return redirect('home')
+    bookings = Booking.objects.filter(hotel__owner=request.user).order_by('-id')
+    return render(request, 'core/owner_bookings.html', {'bookings': bookings})
+
+# Confirm booking
+@login_required
+def confirm_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+    if not hasattr(request.user, 'profile') or (request.user != booking.hotel.owner and request.user.profile.role != 'manager'):
+        messages.error(request, 'Access denied.')
+        return redirect('owner_bookings')
+    
+    nights = (booking.check_out - booking.check_in).days
+    price = booking.room.price_per_night if booking.room else booking.hotel.price_per_night
+    booking.amount = price * nights
+    booking.status = 'confirmed'
+    booking.save()
+
+    # SMS code (කලින් තියෙන safe version එක keep කරන්න)
+
+    messages.success(request, 'Booking confirmed successfully!')
+    return render(request, 'core/booking_success.html')
+
+# Reject booking
+@login_required
+def reject_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+    if not hasattr(request.user, 'profile') or (request.user != booking.hotel.owner and request.user.profile.role != 'manager'):
+        messages.error(request, 'Access denied.')
+        return redirect('owner_bookings')
+    booking.status = 'cancelled'
+    booking.save()
+    messages.success(request, 'Booking rejected.')
+    return redirect('manager_dashboard' if request.user.profile.role == 'manager' else 'owner_bookings')
+
+# Add hotel, edit hotel, add room, add manual booking (කලින් තියෙන code එක keep කරන්න)
+
+# Static pages (about, privacy_policy, terms_of_service, refund_policy, cancellation_policy, contact, services)
+
+# ads.txt
+def ads_txt(request):
+    content = "google.com, pub-7289676285085159, DIRECT, f08c47fec0942fa0"
+    return HttpResponse(content, content_type="text/plain")
