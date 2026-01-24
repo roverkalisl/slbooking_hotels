@@ -3,25 +3,20 @@
 {% block title %}Booking Confirmed!{% endblock %}
 
 {% block content %}
-<div class="container text-center mt-5 py-5">
-    <h1 class="display-4 text-success mb-4">🎉 Booking Confirmed!</h1>
-    <p class="lead mb-5">Thank you for your booking. A confirmation SMS has been sent to your phone.</p>
-    <p class="fs-5">You will be redirected to the home page shortly...</p>
-    <a href="{% url 'home' %}" class="btn btn-primary btn-lg mt-4">Back to Home</a>
+<div class="container mt-5 mb-5 text-center">
+    <div class="alert alert-success shadow-lg py-5">
+        <h1 class="display-4 fw-bold mb-4">🎉 Booking Confirmed!</h1>
+        <p class="lead fs-3">Thank you for your booking. We have sent confirmation details to your email and SMS.</p>
+        <a href="{% url 'home' %}" class="btn btn-primary btn-lg px-5 mt-4">
+            Back to Home
+        </a>
+    </div>
 </div>
 
-<!-- Event snippet for Purchase conversion -->
+<!-- Google Ads Conversion Event Snippet (මේක මෙතන තියෙන්න ඕනේ) -->
 <script>
   gtag('event', 'conversion', {
-      'send_to': 'AW-599245360/crmuCOv4--EbELCD350C',
-      'transaction_id': ''
+      'send_to': 'AW-599245360/nYrACJ-ArOsbELCE350C'
   });
-</script>
-
-<!-- Auto redirect to home after 5 seconds (optional) -->
-<script>
-  setTimeout(function() {
-      window.location.href = "{% url 'home' %}";
-  }, 5000);
 </script>
 {% endblock %}
