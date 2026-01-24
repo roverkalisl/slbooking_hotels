@@ -21,6 +21,7 @@
                     <tr>
                         <th>ID</th>
                         <th>Hotel</th>
+                        <th>Owner Phone</th> <!-- New column -->
                         <th>Customer</th>
                         <th>Check-in</th>
                         <th>Check-out</th>
@@ -34,6 +35,15 @@
                         <tr>
                             <td>{{ booking.id }}</td>
                             <td>{{ booking.hotel.name }}</td>
+                            <td>
+                                {% if booking.hotel.owner.profile.phone_number %}
+                                    <a href="tel:{{ booking.hotel.owner.profile.phone_number }}" class="btn btn-outline-success btn-sm">
+                                        <i class="fas fa-phone me-1"></i>{{ booking.hotel.owner.profile.phone_number }}
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">Not provided</span>
+                                {% endif %}
+                            </td>
                             <td>{{ booking.user.username }}<br><small class="text-muted">{{ booking.user.email }}</small></td>
                             <td>{{ booking.check_in }}</td>
                             <td>{{ booking.check_out }}</td>
@@ -69,23 +79,19 @@
 
 <!-- Web Browser Notification Script -->
 <script>
-    // Request notification permission
     if ('Notification' in window && Notification.permission === "default") {
         Notification.requestPermission();
     }
 
-    // Show notification if pending bookings
     {% if pending_bookings > 0 %}
         if (Notification.permission === "granted") {
             new Notification("New Pending Bookings!", {
                 body: "There are {{ pending_bookings }} pending bookings across all hotels.",
-                icon: "{% static 'images/logo.png' %}",  // logo එක තියෙනවා නම් path change කරන්න
-                tag: "pending-bookings"
+                icon: "{% static 'images/logo.png' %}"
             });
         }
     {% endif %}
 
-    // Auto refresh every 30 seconds to check new bookings
     setInterval(function() {
         location.reload();
     }, 30000);
