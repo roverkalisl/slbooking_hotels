@@ -196,24 +196,21 @@
 
         <!-- Location Tab -->
         <div class="tab-pane fade" id="location" role="tabpanel">
-            <h4>Location</h4>
-            {% if hotel.google_location_link %}
-                <iframe 
-                    src="{{ hotel.google_location_link }}" 
-                    width="100%" 
-                    height="450" 
-                    style="border:0;" 
-                    allowfullscreen="" 
-                    loading="lazy" 
-                    referrerpolicy="no-referrer-when-downgrade">
-                </iframe>
-            {% else %}
-                <div class="alert alert-info">
-                    No map available. Please contact the owner for directions.
-                </div>
-            {% endif %}
+    <h4>Location</h4>
+    {% if hotel.google_location_link %}
+        <div class="text-center">
+            <a href="{{ hotel.google_location_link }}" target="_blank" class="btn btn-primary btn-lg px-5 shadow">
+                <i class="fas fa-map-marked-alt me-2"></i>Open in Google Maps
+            </a>
+            <p class="mt-3 text-muted">Click the button above to view the location on Google Maps</p>
         </div>
-    </div>
+    {% else %}
+        <div class="alert alert-info">
+            No map link available. Please contact the owner for directions.
+        </div>
+    {% endif %}
+</div>
+    #</div>
 
     <!-- Back Button -->
     <div class="text-center mt-5">
