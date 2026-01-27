@@ -1,110 +1,121 @@
 {% extends 'core/base.html' %}
 {% load static %}
 
-{% block title %}Add New Hotel/Villa{% endblock %}
+{% block title %}Add Hotel{% endblock %}
 
 {% block content %}
 <div class="container mt-5 mb-5">
     <div class="row justify-content-center">
-        <div class="col-lg-9">
+        <div class="col-md-8 col-lg-7">
             <div class="card shadow-lg border-0 rounded-4">
-                <div class="card-header bg-primary text-white text-center py-4 rounded-top-4">
-                    <h2 class="mb-0"><i class="fas fa-hotel me-3"></i>Add New Hotel or Villa</h2>
+                <div class="card-header bg-success text-white text-center py-4 rounded-top">
+                    <h3 class="mb-0 fw-bold">Add New Hotel / Villa</h3>
                 </div>
                 <div class="card-body p-5">
+                    <!-- Form Errors -->
+                    {% if form.errors %}
+                        <div class="alert alert-danger rounded mb-4">
+                            <strong>Please fix the following errors:</strong>
+                            <ul class="mb-0 mt-2">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
 
-                        <div class="row">
-                            <div class="col-md-6 mb-4">
-                                <label class="form-label fw-bold">Hotel/Villa Name <span class="text-danger">*</span></label>
-                                {{ form.name }}
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">{{ form.name.label }}</label>
+                                {{ form.name|add_class:"form-control form-control-lg" }}
                             </div>
-                            <div class="col-md-6 mb-4">
-                                <label class="form-label fw-bold">Rented Type <span class="text-danger">*</span></label>
-                                {{ form.rented_type }}
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">{{ form.address.label }}</label>
+                                {{ form.address|add_class:"form-control form-control-lg" }}
                             </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Address <span class="text-danger">*</span></label>
-                            {{ form.address }}
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Description</label>
-                            {{ form.description }}
-                            <div class="form-text">Tell guests what makes your place special!</div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-4">
-                                <label class="form-label fw-bold">Google Maps Location Link</label>
-                                {{ form.google_location_link }}
+                            <div class="col-12">
+                                <label class="form-label fw-bold">{{ form.description.label }}</label>
+                                {{ form.description|add_class:"form-control" }}
                             </div>
-                            <div class="col-md-6 mb-4">
-                                <label class="form-label fw-bold">Social Media Link</label>
-                                {{ form.social_media_link }}
-                            </div>
-                        </div>
 
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Available Facilities</label>
-                            <div class="row">
-                                {% for choice in form.facilities %}
-                                    <div class="col-md-4 col-sm-6 mb-3">
-                                        <div class="form-check">
-                                            {{ choice.tag }}
-                                            <label class="form-check-label">{{ choice.choice_label }}</label>
+                            <!-- Images -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">{{ form.main_image.label }} (Main)</label>
+                                {{ form.main_image|add_class:"form-control" }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">{{ form.photo1.label }}</label>
+                                {{ form.photo1|add_class:"form-control" }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">{{ form.photo2.label }}</label>
+                                {{ form.photo2|add_class:"form-control" }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">{{ form.photo3.label }}</label>
+                                {{ form.photo3|add_class:"form-control" }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">{{ form.photo4.label }}</label>
+                                {{ form.photo4|add_class:"form-control" }}
+                            </div>
+
+                            <!-- Facilities -->
+                            <div class="col-12">
+                                <label class="form-label fw-bold">{{ form.facilities.label }}</label>
+                                <div class="row g-3">
+                                    {% for choice in form.facilities %}
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                {{ choice.tag }}
+                                                <label class="form-check-label" for="{{ choice.id_for_label }}">
+                                                    {{ choice.choice_label }}
+                                                </label>
+                                            </div>
                                         </div>
-                                    </div>
-                                {% endfor %}
+                                    {% endfor %}
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- Multi Photos -->
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Main Featured Image</label>
-                            {{ form.main_image }}
-                            <div class="form-text">This will be the main photo in listings</div>
-                        </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">{{ form.rented_type.label }}</label>
+                                {{ form.rented_type|add_class:"form-select form-select-lg" }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">{{ form.price_per_night.label }}</label>
+                                {{ form.price_per_night|add_class:"form-control form-control-lg" }}
+                            </div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-4">
-                                <label class="form-label fw-bold">Additional Photo 1</label>
-                                {{ form.photo1 }}
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">{{ form.google_location_link.label }} (Embed link)</label>
+                                {{ form.google_location_link|add_class:"form-control form-control-lg" }}
                             </div>
-                            <div class="col-md-6 mb-4">
-                                <label class="form-label fw-bold">Additional Photo 2</label>
-                                {{ form.photo2 }}
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">{{ form.facebook_page.label }}</label>
+                                {{ form.facebook_page|add_class:"form-control form-control-lg" }}
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-4">
-                                <label class="form-label fw-bold">Additional Photo 3</label>
-                                {{ form.photo3 }}
-                            </div>
-                            <div class="col-md-6 mb-4">
-                                <label class="form-label fw-bold">Additional Photo 4</label>
-                                {{ form.photo4 }}
-                            </div>
-                        </div>
 
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Price per Night (LKR) - Full Villa only</label>
-                            {{ form.price_per_night }}
-                            <div class="form-text">Required only if renting as Full Villa</div>
-                        </div>
-
-                        <div class="d-grid d-md-flex justify-content-md-end gap-3">
-                            <a href="{% url 'owner_dashboard' %}" class="btn btn-outline-secondary btn-lg">
-                                <i class="fas fa-arrow-left me-2"></i>Cancel
-                            </a>
-                            <button type="submit" class="btn btn-success btn-lg">
-                                <i class="fas fa-save me-2"></i>Add Hotel/Villa
-                            </button>
+                            <div class="col-12 text-center mt-4">
+                                <button type="submit" class="btn btn-success btn-lg px-5 fw-bold shadow">
+                                    Add Hotel
+                                </button>
+                            </div>
                         </div>
                     </form>
+
+                    <div class="text-center mt-4">
+                        <a href="{% url 'owner_dashboard' %}" class="btn btn-outline-secondary">
+                            Back to Dashboard
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
