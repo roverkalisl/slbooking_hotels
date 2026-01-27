@@ -8,13 +8,29 @@
     <div class="row justify-content-center">
         <div class="col-lg-9">
             <div class="card shadow-lg border-0 rounded-4">
-                <div class="card-header bg-primary text-white text-center py-4 rounded-top-4">
+                <div class="card-header bg-primary text-white text-center py-4 rounded-top">
                     <h2 class="mb-0"><i class="fas fa-hotel me-3"></i>Add New Hotel or Villa</h2>
                 </div>
                 <div class="card-body p-5">
+                    <!-- Form Errors Display -->
+                    {% if form.errors %}
+                        <div class="alert alert-danger rounded mb-4">
+                            <strong>Please fix the following errors:</strong>
+                            <ul class="mb-0 mt-2">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
-
                         <div class="row">
                             <div class="col-md-6 mb-4">
                                 <label class="form-label fw-bold">Hotel/Villa Name <span class="text-danger">*</span></label>
@@ -25,18 +41,15 @@
                                 {{ form.rented_type }}
                             </div>
                         </div>
-
                         <div class="mb-4">
                             <label class="form-label fw-bold">Address <span class="text-danger">*</span></label>
                             {{ form.address }}
                         </div>
-
                         <div class="mb-4">
                             <label class="form-label fw-bold">Description</label>
                             {{ form.description }}
                             <div class="form-text">Tell guests what makes your place special!</div>
                         </div>
-
                         <div class="row">
                             <div class="col-md-6 mb-4">
                                 <label class="form-label fw-bold">Google Maps Location Link</label>
@@ -44,10 +57,9 @@
                             </div>
                             <div class="col-md-6 mb-4">
                                 <label class="form-label fw-bold">Social Media Link</label>
-                                {{ form.social_media_link }}
+                                {{ form.facebook_page }}
                             </div>
                         </div>
-
                         <div class="mb-4">
                             <label class="form-label fw-bold">Available Facilities</label>
                             <div class="row">
@@ -61,14 +73,12 @@
                                 {% endfor %}
                             </div>
                         </div>
-
                         <!-- Multi Photos -->
                         <div class="mb-4">
                             <label class="form-label fw-bold">Main Featured Image</label>
                             {{ form.main_image }}
                             <div class="form-text">This will be the main photo in listings</div>
                         </div>
-
                         <div class="row">
                             <div class="col-md-6 mb-4">
                                 <label class="form-label fw-bold">Additional Photo 1</label>
@@ -89,13 +99,11 @@
                                 {{ form.photo4 }}
                             </div>
                         </div>
-
                         <div class="mb-4">
                             <label class="form-label fw-bold">Price per Night (LKR) - Full Villa only</label>
                             {{ form.price_per_night }}
                             <div class="form-text">Required only if renting as Full Villa</div>
                         </div>
-
                         <div class="d-grid d-md-flex justify-content-md-end gap-3">
                             <a href="{% url 'owner_dashboard' %}" class="btn btn-outline-secondary btn-lg">
                                 <i class="fas fa-arrow-left me-2"></i>Cancel

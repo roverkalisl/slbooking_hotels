@@ -45,6 +45,21 @@ class HotelForm(forms.ModelForm):
             'facilities': forms.CheckboxSelectMultiple(),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Bootstrap classes add කරන්න
+        self.fields['name'].widget.attrs.update({'class': 'form-control form-control-lg'})
+        self.fields['address'].widget.attrs.update({'class': 'form-control form-control-lg'})
+        self.fields['description'].widget.attrs.update({'class': 'form-control', 'rows': 4})
+        self.fields['main_image'].widget.attrs.update({'class': 'form-control'})
+        self.fields['photo1'].widget.attrs.update({'class': 'form-control'})
+        self.fields['photo2'].widget.attrs.update({'class': 'form-control'})
+        self.fields['photo3'].widget.attrs.update({'class': 'form-control'})
+        self.fields['photo4'].widget.attrs.update({'class': 'form-control'})
+        self.fields['rented_type'].widget.attrs.update({'class': 'form-select form-select-lg'})
+        self.fields['price_per_night'].widget.attrs.update({'class': 'form-control form-control-lg'})
+        self.fields['google_location_link'].widget.attrs.update({'class': 'form-control form-control-lg'})
+        self.fields['facebook_page'].widget.attrs.update({'class': 'form-control form-control-lg'})
 class RoomForm(forms.ModelForm):
     class Meta:
         model = Room
