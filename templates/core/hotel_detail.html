@@ -113,6 +113,16 @@
                                     <li class="list-group-item"><strong>Price per night:</strong> LKR {{ hotel.price_per_night|floatformat:2 }}</li>
                                 {% endif %}
                                 <li class="list-group-item"><strong>Rented as:</strong> {{ hotel.get_rented_type_display }}</li>
+                                <li class="list-group-item">
+                                    <strong>Owner Contact:</strong><br>
+                                    {% if hotel.owner.profile.phone_number %}
+                                        <a href="tel:{{ hotel.owner.profile.phone_number }}" class="btn btn-success btn-sm mt-2">
+                                            <i class="fas fa-phone me-2"></i>Call Owner: {{ hotel.owner.profile.phone_number }}
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">Phone number not provided</span>
+                                    {% endif %}
+                                </li>
                             </ul>
                         </div>
                     </div>
@@ -196,21 +206,21 @@
 
         <!-- Location Tab -->
         <div class="tab-pane fade" id="location" role="tabpanel">
-    <h4>Location</h4>
-    {% if hotel.google_location_link %}
-        <div class="text-center">
-            <a href="{{ hotel.google_location_link }}" target="_blank" class="btn btn-primary btn-lg px-5 shadow">
-                <i class="fas fa-map-marked-alt me-2"></i>Open in Google Maps
-            </a>
-            <p class="mt-3 text-muted">Click the button above to view the location on Google Maps</p>
+            <h4>Location</h4>
+            {% if hotel.google_location_link %}
+                <div class="text-center">
+                    <a href="{{ hotel.google_location_link }}" target="_blank" class="btn btn-primary btn-lg px-5 shadow">
+                        <i class="fas fa-map-marked-alt me-2"></i>Open in Google Maps
+                    </a>
+                    <p class="mt-3 text-muted">Click the button above to view the location on Google Maps</p>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    No map link available. Please contact the owner for directions.
+                </div>
+            {% endif %}
         </div>
-    {% else %}
-        <div class="alert alert-info">
-            No map link available. Please contact the owner for directions.
-        </div>
-    {% endif %}
-</div>
-    #</div>
+    </div>
 
     <!-- Back Button -->
     <div class="text-center mt-5">
