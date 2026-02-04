@@ -73,3 +73,12 @@ class ManualBookingForm(forms.ModelForm):
             'check_in': forms.DateInput(attrs={'type': 'date'}),
             'check_out': forms.DateInput(attrs={'type': 'date'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['user'].queryset = User.objects.all()
+        # Bootstrap classes add කරන්න
+        self.fields['user'].widget.attrs.update({'class': 'form-select form-select-lg'})
+        self.fields['check_in'].widget.attrs.update({'class': 'form-control form-control-lg'})
+        self.fields['check_out'].widget.attrs.update({'class': 'form-control form-control-lg'})
+        self.fields['status'].widget.attrs.update({'class': 'form-select form-select-lg'})
