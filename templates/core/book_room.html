@@ -11,44 +11,87 @@
             {% if room.image %}
                 <img src="{{ room.image.url }}" class="img-fluid rounded shadow mb-4" alt="{{ room.room_number }}">
             {% endif %}
-            <p><strong>Room Type:</strong> {{ room.room_type }}</p>
-            <p><strong>Price per night:</strong> Rs. {{ room.price_per_night }}</p>
         </div>
         <div class="col-md-6">
-            <h4>Availability Calendar</h4>
-            <div id="calendar"></div>
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-success">{{ room.room_type }} - {{ room.ac_type }}</h5>
+                    <p class="fs-4 fw-bold text-success">LKR {{ room.price_per_night }}/night</p>
+                </div>
+            </div>
         </div>
     </div>
 
-    <form method="post" class="mt-4">
-        {% csrf_token %}
-        <div class="mb-3">
-            <label class="form-label">Check-in Date</label>
-            {{ form.check_in }}
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Check-out Date</label>
-            {{ form.check_out }}
-        </div>
-        <button type="submit" class="btn btn-success btn-lg">Confirm Booking</button>
-    </form>
+    <!-- Availability Calendar -->
+    <div class="mt-5">
+        <h4 class="fw-bold text-primary mb-3">Availability Calendar</h4>
+        <div id="room-calendar" class="border rounded p-3 bg-light"></div>
+        <p class="text-muted mt-2 small">
+            <span class="bg-danger text-white px-2 py-1 rounded">Red</span> = Booked dates (unavailable)
+        </p>
+    </div>
 
-    <!-- FullCalendar -->
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var calendarEl = document.getElementById('calendar');
-            var calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                selectable: true,
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'dayGridMonth,timeGridWeek'
-                },
-                // Booked dates disable කරන්න (advanced සඳහා backend එකෙන් JSON pass කරන්න)
-            });
-            calendar.render();
+    <!-- Booking Form -->
+    <div class="card shadow-sm mt-5">
+        <div class="card-body">
+            <form action="{% url 'book_room' room.id %}" method="post">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Check-in Date <span class="text-danger">*</span></label>
+                        <input type="date" name="check_in" class="form-control form-control-lg" required min="{% now 'Y-m-d' %}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Check-out Date <span class="text-danger">*</span></label>
+                        <input type="date" name="check_out" class="form-control form-control-lg" required min="{% now 'Y-m-d' %}">
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            Book This Room
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <a href="{% url 'hotel_detail' room.hotel.id %}" class="btn btn-outline-secondary btn-lg">
+            <i class="fas fa-arrow-left me-2"></i>Back to Hotel Details
+        </a>
+    </div>
+</div>
+
+<!-- FullCalendar Script for Room -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('room-calendar');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth'
+            },
+            height: 'auto',
+            events: [
+                {% for booking in room.booking_set.all %}
+                    {% if booking.status in ['pending', 'confirmed'] %}
+                        {
+                            start: '{{ booking.check_in }}',
+                            end: '{{ booking.check_out|date:"Y-m-d" }}',
+                            display: 'background',
+                            backgroundColor: '#dc3545',
+                            borderColor: '#dc3545',
+                            title: 'Booked'
+                        },
+                    {% endif %}
+                {% endfor %}
+            ],
+            selectable: false,
+            selectOverlap: false
         });
-    </script>
+        calendar.render();
+    });
+</script>
 {% endblock %}

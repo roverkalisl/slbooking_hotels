@@ -12,24 +12,29 @@
             </h3>
         </div>
         <div class="card-body p-5">
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i>
-                <strong>Price per night:</strong> LKR {{ hotel.price_per_night|floatformat:2 }}
+            <!-- Availability Calendar -->
+            <div class="mb-5">
+                <h4 class="fw-bold text-primary mb-3">Availability Calendar</h4>
+                <div id="villa-calendar" class="border rounded p-3 bg-light"></div>
+                <p class="text-muted mt-2 small">
+                    <span class="bg-danger text-white px-2 py-1 rounded">Red</span> = Booked dates (unavailable)
+                </p>
             </div>
 
+            <!-- Booking Form -->
             <form action="{% url 'book_villa' hotel.id %}" method="post">
                 {% csrf_token %}
                 <div class="row g-4">
                     <div class="col-md-6">
-                        <label for="check_in" class="form-label fw-bold">Check-in Date</label>
-                        <input type="date" name="check_in" id="check_in" class="form-control form-control-lg" required>
+                        <label class="form-label fw-bold">Check-in Date <span class="text-danger">*</span></label>
+                        <input type="date" name="check_in" class="form-control form-control-lg" required min="{% now 'Y-m-d' %}">
                     </div>
                     <div class="col-md-6">
-                        <label for="check_out" class="form-label fw-bold">Check-out Date</label>
-                        <input type="date" name="check_out" id="check_out" class="form-control form-control-lg" required>
+                        <label class="form-label fw-bold">Check-out Date <span class="text-danger">*</span></label>
+                        <input type="date" name="check_out" class="form-control form-control-lg" required min="{% now 'Y-m-d' %}">
                     </div>
-                    <div class="col-12 text-center mt-4">
-                        <button type="submit" class="btn btn-success btn-lg px-5">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-success btn-lg w-100">
                             <i class="fas fa-calendar-check me-2"></i>Request Booking
                         </button>
                     </div>
@@ -44,4 +49,37 @@
         </div>
     </div>
 </div>
+
+<!-- FullCalendar Script for Villa -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('villa-calendar');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth'
+            },
+            height: 'auto',
+            events: [
+                {% for booking in hotel.booking_set.all %}
+                    {% if booking.status in ['pending', 'confirmed'] %}
+                        {
+                            start: '{{ booking.check_in }}',
+                            end: '{{ booking.check_out|date:"Y-m-d" }}',  // end date exclusive in FullCalendar
+                            display: 'background',
+                            backgroundColor: '#dc3545',
+                            borderColor: '#dc3545',
+                            title: 'Booked'
+                        },
+                    {% endif %}
+                {% endfor %}
+            ],
+            selectable: false,
+            selectOverlap: false
+        });
+        calendar.render();
+    });
+</script>
 {% endblock %}
