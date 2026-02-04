@@ -8,35 +8,51 @@
     <div class="row justify-content-center">
         <div class="col-lg-8">
             <div class="card shadow-lg border-0 rounded-4">
-                <div class="card-header bg-secondary text-white text-center py-4 rounded-top-4">
+                <div class="card-header bg-secondary text-white text-center py-4 rounded-top">
                     <h2 class="mb-0"><i class="fas fa-plus-circle me-3"></i>Add Manual Booking - {{ hotel.name }}</h2>
                 </div>
                 <div class="card-body p-5">
-                    {% if messages %}
-                        {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        {% endfor %}
+                    <!-- Form Errors Display -->
+                    {% if form.errors %}
+                        <div class="alert alert-danger rounded mb-4">
+                            <strong>Please fix the following errors:</strong>
+                            <ul class="mb-0 mt-2">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
                     {% endif %}
 
                     <form method="post">
                         {% csrf_token %}
+
                         <div class="mb-4">
-                            <label class="form-label fw-bold">Source (e.g., Booking.com, Agoda, Walk-in)</label>
-                            {{ form.source }}
+                            <label class="form-label fw-bold">{{ form.user.label }} <span class="text-danger">*</span></label>
+                            {{ form.user|add_class:"form-select form-select-lg" }}
                         </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-4">
-                                <label class="form-label fw-bold">Check-in Date</label>
-                                {{ form.check_in }}
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">{{ form.check_in.label }} <span class="text-danger">*</span></label>
+                                {{ form.check_in|add_class:"form-control form-control-lg" }}
                             </div>
-                            <div class="col-md-6 mb-4">
-                                <label class="form-label fw-bold">Check-out Date</label>
-                                {{ form.check_out }}
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">{{ form.check_out.label }} <span class="text-danger">*</span></label>
+                                {{ form.check_out|add_class:"form-control form-control-lg" }}
                             </div>
                         </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">{{ form.status.label }}</label>
+                            {{ form.status|add_class:"form-select form-select-lg" }}
+                        </div>
+
                         <div class="d-grid d-md-flex justify-content-md-end gap-3">
                             <a href="{% url 'owner_dashboard' %}" class="btn btn-outline-secondary btn-lg">
                                 <i class="fas fa-arrow-left me-2"></i>Cancel
