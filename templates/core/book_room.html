@@ -22,12 +22,14 @@
         </div>
     </div>
 
-    <!-- Availability Calendar -->
+    <!-- Availability Calendar (හැම booking එකක්ම පේනවා) -->
     <div class="mt-5">
         <h4 class="fw-bold text-primary mb-3">Availability Calendar</h4>
         <div id="room-calendar" class="border rounded p-3 bg-light"></div>
         <p class="text-muted mt-2 small">
-            <span class="bg-danger text-white px-2 py-1 rounded">Red</span> = Booked dates (unavailable)
+            <span class="bg-success text-white px-2 py-1 rounded">Green</span> = Confirmed
+            <span class="bg-warning text-dark px-2 py-1 rounded ms-3">Yellow</span> = Pending
+            <span class="bg-secondary text-white px-2 py-1 rounded ms-3">Grey</span> = Cancelled
         </p>
     </div>
 
@@ -39,11 +41,11 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Check-in Date <span class="text-danger">*</span></label>
-                        <input type="date" name="check_in" class="form-control form-control-lg" required min="{% now 'Y-m-d' %}">
+                        <input type="date" name="check_in" class="form-control form-control-lg" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Check-out Date <span class="text-danger">*</span></label>
-                        <input type="date" name="check_out" class="form-control form-control-lg" required min="{% now 'Y-m-d' %}">
+                        <input type="date" name="check_out" class="form-control form-control-lg" required>
                     </div>
                     <div class="col-12">
                         <button type="submit" class="btn btn-primary btn-lg w-100">
@@ -62,7 +64,7 @@
     </div>
 </div>
 
-<!-- FullCalendar Script for Room -->
+<!-- FullCalendar Script -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('room-calendar');
@@ -76,20 +78,16 @@
             height: 'auto',
             events: [
                 {% for booking in room.booking_set.all %}
-                    {% if booking.status in ['pending', 'confirmed'] %}
-                        {
-                            start: '{{ booking.check_in }}',
-                            end: '{{ booking.check_out|date:"Y-m-d" }}',
-                            display: 'background',
-                            backgroundColor: '#dc3545',
-                            borderColor: '#dc3545',
-                            title: 'Booked'
-                        },
-                    {% endif %}
+                    {
+                        title: '{{ booking.get_status_display }}',
+                        start: '{{ booking.check_in }}',
+                        end: '{{ booking.check_out|date:"Y-m-d" }}',
+                        backgroundColor: '{% if booking.status == "confirmed" %}#28a745{% elif booking.status == "pending" %}#ffc107{% else %}#6c757d{% endif %}',
+                        borderColor: '{% if booking.status == "confirmed" %}#28a745{% elif booking.status == "pending" %}#ffc107{% else %}#6c757d{% endif %}',
+                        textColor: 'white'
+                    },
                 {% endfor %}
-            ],
-            selectable: false,
-            selectOverlap: false
+            ]
         });
         calendar.render();
     });
