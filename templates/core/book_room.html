@@ -27,13 +27,14 @@
         <h4 class="fw-bold text-primary mb-3">Availability Calendar</h4>
         <div id="room-calendar" class="border rounded p-3 bg-light"></div>
         <p class="text-muted mt-2 small">
-            <span class="bg-success text-white px-2 py-1 rounded">Green</span> = Confirmed
-            <span class="bg-warning text-dark px-2 py-1 rounded ms-3">Yellow</span> = Pending
-            <span class="bg-secondary text-white px-2 py-1 rounded ms-3">Grey</span> = Cancelled
+            <span class="bg-success text-white px-2 py-1 rounded">Green</span> = Confirmed &nbsp;
+            <span class="bg-warning text-dark px-2 py-1 rounded">Yellow</span> = Pending &nbsp;
+            <span class="bg-secondary text-white px-2 py-1 rounded">Grey</span> = Cancelled/Manual
         </p>
+        <p class="text-danger fw-bold">Booked dates are unavailable for selection below.</p>
     </div>
 
-    <!-- Booking Form -->
+    <!-- Booking Form (flatpickr එක්ක disable pending/confirmed dates) -->
     <div class="card shadow-sm mt-5">
         <div class="card-body">
             <form action="{% url 'book_room' room.id %}" method="post">
@@ -41,11 +42,11 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Check-in Date <span class="text-danger">*</span></label>
-                        <input type="date" name="check_in" class="form-control form-control-lg" required>
+                        <input type="text" name="check_in" class="form-control form-control-lg flatpickr" placeholder="Select check-in date" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Check-out Date <span class="text-danger">*</span></label>
-                        <input type="date" name="check_out" class="form-control form-control-lg" required>
+                        <input type="text" name="check_out" class="form-control form-control-lg flatpickr" placeholder="Select check-out date" required>
                     </div>
                     <div class="col-12">
                         <button type="submit" class="btn btn-primary btn-lg w-100">
@@ -64,7 +65,7 @@
     </div>
 </div>
 
-<!-- FullCalendar Script -->
+<!-- FullCalendar Visualization -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('room-calendar');
@@ -90,6 +91,31 @@
             ]
         });
         calendar.render();
+    });
+</script>
+
+<!-- Flatpickr for Date Inputs -->
+<script>
+    const bookedRanges = [
+        {% for booking in room.booking_set.all %}
+            {% if booking.status in ['pending', 'confirmed'] %}
+                {from: "{{ booking.check_in }}", to: "{{ booking.check_out }}"},
+            {% endif %}
+        {% endfor %}
+    ];
+
+    flatpickr(".flatpickr", {
+        dateFormat: "Y-m-d",
+        minDate: "today",
+        disable: bookedRanges,
+        onChange: function(selectedDates, dateStr, instance) {
+            if (instance.element.name === "check_in" && selectedDates[0]) {
+                const checkOutPicker = document.querySelector('input[name="check_out"]')._flatpickr;
+                if (checkOutPicker) {
+                    checkOutPicker.set("minDate", selectedDates[0]);
+                }
+            }
+        }
     });
 </script>
 {% endblock %}
