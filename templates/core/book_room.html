@@ -22,19 +22,19 @@
         </div>
     </div>
 
-    <!-- Availability Calendar (හැම booking එකක්ම පේනවා) -->
+    <!-- Availability Calendar -->
     <div class="mt-5">
         <h4 class="fw-bold text-primary mb-3">Availability Calendar</h4>
-        <div id="room-calendar" class="border rounded p-3 bg-light"></div>
-        <p class="text-muted mt-2 small">
+        <div id="room-calendar" class="border rounded p-3 bg-light shadow-sm"></div>
+        <p class="text-muted mt-3 small">
             <span class="bg-success text-white px-2 py-1 rounded">Green</span> = Confirmed &nbsp;
             <span class="bg-warning text-dark px-2 py-1 rounded">Yellow</span> = Pending &nbsp;
             <span class="bg-secondary text-white px-2 py-1 rounded">Grey</span> = Cancelled/Manual
         </p>
-        <p class="text-danger fw-bold">Booked dates are unavailable for selection below.</p>
+        <p class="text-danger fw-bold">Red/Yellow dates are unavailable for booking.</p>
     </div>
 
-    <!-- Booking Form (flatpickr එක්ක disable pending/confirmed dates) -->
+    <!-- Booking Form -->
     <div class="card shadow-sm mt-5">
         <div class="card-body">
             <form action="{% url 'book_room' room.id %}" method="post">
@@ -42,14 +42,14 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Check-in Date <span class="text-danger">*</span></label>
-                        <input type="text" name="check_in" class="form-control form-control-lg flatpickr" placeholder="Select check-in date" required>
+                        <input type="text" name="check_in" class="form-control form-control-lg flatpickr" placeholder="Select check-in" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Check-out Date <span class="text-danger">*</span></label>
-                        <input type="text" name="check_out" class="form-control form-control-lg flatpickr" placeholder="Select check-out date" required>
+                        <input type="text" name="check_out" class="form-control form-control-lg flatpickr" placeholder="Select check-out" required>
                     </div>
                     <div class="col-12">
-                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <button type="submit" class="btn btn-primary btn-lg w-100 shadow">
                             Book This Room
                         </button>
                     </div>
@@ -94,7 +94,7 @@
     });
 </script>
 
-<!-- Flatpickr for Date Inputs -->
+<!-- Flatpickr Disable Booked Dates -->
 <script>
     const bookedRanges = [
         {% for booking in room.booking_set.all %}
@@ -110,10 +110,8 @@
         disable: bookedRanges,
         onChange: function(selectedDates, dateStr, instance) {
             if (instance.element.name === "check_in" && selectedDates[0]) {
-                const checkOutPicker = document.querySelector('input[name="check_out"]')._flatpickr;
-                if (checkOutPicker) {
-                    checkOutPicker.set("minDate", selectedDates[0]);
-                }
+                const outPicker = document.querySelector('input[name="check_out"]')._flatpickr;
+                if (outPicker) outPicker.set("minDate", selectedDates[0]);
             }
         }
     });

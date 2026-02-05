@@ -12,32 +12,32 @@
             </h3>
         </div>
         <div class="card-body p-5">
-            <!-- Availability Calendar (හැම booking එකක්ම පේනවා - visualization සඳහා) -->
+            <!-- Availability Calendar -->
             <div class="mb-5">
                 <h4 class="fw-bold text-primary mb-3">Availability Calendar</h4>
-                <div id="villa-calendar" class="border rounded p-3 bg-light"></div>
-                <p class="text-muted mt-2 small">
+                <div id="villa-calendar" class="border rounded p-3 bg-light shadow-sm"></div>
+                <p class="text-muted mt-3 small">
                     <span class="bg-success text-white px-2 py-1 rounded">Green</span> = Confirmed &nbsp;
                     <span class="bg-warning text-dark px-2 py-1 rounded">Yellow</span> = Pending &nbsp;
                     <span class="bg-secondary text-white px-2 py-1 rounded">Grey</span> = Cancelled/Manual
                 </p>
-                <p class="text-danger fw-bold">Booked dates are unavailable for selection below.</p>
+                <p class="text-danger fw-bold">Red/Yellow dates are unavailable for booking.</p>
             </div>
 
-            <!-- Booking Form (flatpickr එක්ක disable pending/confirmed dates) -->
+            <!-- Booking Form -->
             <form action="{% url 'book_villa' hotel.id %}" method="post">
                 {% csrf_token %}
                 <div class="row g-4">
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Check-in Date <span class="text-danger">*</span></label>
-                        <input type="text" name="check_in" class="form-control form-control-lg flatpickr" placeholder="Select check-in date" required>
+                        <input type="text" name="check_in" class="form-control form-control-lg flatpickr" placeholder="Select check-in" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Check-out Date <span class="text-danger">*</span></label>
-                        <input type="text" name="check_out" class="form-control form-control-lg flatpickr" placeholder="Select check-out date" required>
+                        <input type="text" name="check_out" class="form-control form-control-lg flatpickr" placeholder="Select check-out" required>
                     </div>
                     <div class="col-12">
-                        <button type="submit" class="btn btn-success btn-lg w-100">
+                        <button type="submit" class="btn btn-success btn-lg w-100 shadow">
                             <i class="fas fa-calendar-check me-2"></i>Request Booking
                         </button>
                     </div>
@@ -82,7 +82,7 @@
     });
 </script>
 
-<!-- Flatpickr for Date Inputs (disable pending/confirmed dates) -->
+<!-- Flatpickr Disable Booked Dates -->
 <script>
     const bookedRanges = [
         {% for booking in hotel.booking_set.all %}
@@ -96,12 +96,11 @@
         dateFormat: "Y-m-d",
         minDate: "today",
         disable: bookedRanges,
+        enableTime: false,
         onChange: function(selectedDates, dateStr, instance) {
             if (instance.element.name === "check_in" && selectedDates[0]) {
-                const checkOutPicker = document.querySelector('input[name="check_out"]')._flatpickr;
-                if (checkOutPicker) {
-                    checkOutPicker.set("minDate", selectedDates[0]);
-                }
+                const outPicker = document.querySelector('input[name="check_out"]')._flatpickr;
+                if (outPicker) outPicker.set("minDate", selectedDates[0]);
             }
         }
     });
